@@ -3,7 +3,7 @@
   "system": "Linux",
   "machine": "x86_64",
   "fixed_depth_search": {
-    "scenarios": 8,
+    "scenarios": 7,
     "players": [
       0,
       1
@@ -13,26 +13,44 @@
       4
     ],
     "repeats": 3,
-    "time_limit_ms": null
+    "time_limit_ms": null,
+    "scenario_names": [
+      "default",
+      "open",
+      "walls",
+      "defense",
+      "bullet",
+      "h_detour",
+      "h_dodge"
+    ]
   },
   "fixed_depth_matches": {
-    "scenarios": 8,
+    "scenarios": 7,
     "depth": 3,
     "max_cycles": 60,
-    "matches": 96,
-    "swapped_seats": true
+    "matches": 84,
+    "swapped_seats": true,
+    "scenario_names": [
+      "default",
+      "open",
+      "walls",
+      "defense",
+      "bullet",
+      "h_detour",
+      "h_dodge"
+    ]
   },
   "equal_time_matches": {
     "scenarios": [
-      "h_dodge",
-      "asymmetric"
+      "h_dodge"
     ],
     "depth_cap": 6,
     "time_limit_ms": 30,
     "max_cycles": 20,
-    "matches": 24,
+    "matches": 12,
     "swapped_seats": true
   },
   "overtime_definition": "external wall time > 1.1 * time_limit_ms; cooperative soft deadline",
-  "notes": "Experiments ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements."
+  "notes": "Experiments ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements.",
+  "selection_note": "Retired map rows removed; summaries recomputed from retained measurements. Timing values were not remeasured."
 }

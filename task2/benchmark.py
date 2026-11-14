@@ -58,6 +58,8 @@ def build_scenarios():
 
     from demo_maps import build_demo_maps
     cases.update(build_demo_maps())
+    from asymmetric_map import build_asymmetric_map
+    cases["asymmetric"] = build_asymmetric_map()
     return cases
 
 

@@ -33,6 +33,11 @@ Xem cách chạy và kết quả đối chiếu tại [DEMO_MAPS.md](DEMO_MAPS.m
 python task2/compare_heuristics.py --depth 4
 ```
 
+## Map bất đối xứng
+
+Chọn **AI BATTLE → MAP → ASYMMETRIC** để dùng map 11 × 11, xe P0 dưới trái
+và xe P1 trên phải, khác cả hàng lẫn cột. Xem [sơ đồ và vị trí xuất phát](ASYMMETRIC_MAP.md).
+
 ## Kiểm tra
 
 ```sh

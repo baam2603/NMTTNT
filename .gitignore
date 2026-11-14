@@ -3,3 +3,12 @@ __pycache__/
 .venv/
 venv/
 .hiscore
+
+# Local benchmark outputs; submitted measurements live in experiments/.
+/benchmark_results.csv
+/benchmark_summary.csv
+/tournament_results.csv
+/tournament_summary.csv
+/original_results.csv
+/original_summary.csv
+.DS_Store

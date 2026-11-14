@@ -4,7 +4,6 @@ Có **35 map**, chọn trong **AI BATTLE → MAP → ORIGINAL_01 … ORIGINAL_35
 Khi đang chọn dòng MAP, nhấn **O** để tới ORIGINAL_01, trái/phải đổi màn;
 PageUp/PageDown nhảy 5 map, Home/End tới map đầu/cuối. Thanh bên ghi LV01 … LV35.
 
-![Original 01 trong trận hai AI](../images/screens/original-01.png)
 
 ## Định dạng và vị trí xuất phát
 
@@ -71,8 +70,7 @@ nên không tự xóa tường hoặc đổi luật để ép thêm xe.
 Bạn có thể sửa W/S/`.`/a/b trong file TXT rồi bắt đầu lại trận. Vị trí xe và hướng
 đọc từ `tank_pos`/`directions` trong manifest; vị trí căn cứ đọc từ a/b trong TXT.
 `base_pos` trong manifest ghi lại vị trí lúc chuyển để đối chiếu.
-Kiểm thử tái tạo đối chiếu TXT với nguồn: nếu bạn chủ động sửa TXT, phần kiểm thử
-đó sẽ báo khác bản xuất ban đầu; loader vẫn đọc bản đã sửa nếu định dạng hợp lệ.
+Mã SHA-256 trong manifest ghi nội dung lúc chuyển; loader vẫn đọc bản TXT đã sửa nếu định dạng hợp lệ.
 
 Chuyển lại toàn bộ map nguồn (sẽ ghi lại TXT/manifest, không sửa thư mục nguồn):
 
@@ -93,12 +91,8 @@ Benchmark dùng đúng thuật toán hiện tại:
 
 ```sh
 python task2/benchmark.py --scenarios original_01 original_19 original_35 --players both --depths 2 4 --repeats 3 --output original_results.csv --summary original_summary.csv
-python -m unittest discover -s tests -p "test_*.py"
-python tests/smoke_original_maps.py
 ```
 
 `--scenarios all` nay gồm 43 map (8 map cũ + 35 map gốc). Dữ liệu tham khảo cũ
 trong experiments/ vẫn chỉ thuộc 8 map đã ghi trong báo cáo; không tự coi đó là
 số liệu của các map mới.
-
-![Original 35](../images/screens/original-35.png)

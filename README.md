@@ -1,65 +1,80 @@
-# NMTTNT — Battle City AI
+# NMTTNT — Tank Battle / Adversarial Search
 
-Game xe tăng dùng Python/Pygame, gồm hai chế độ:
-
-- **01 PLAYER:** người chơi dùng bàn phím đấu với **4 NPC trên cùng bản đồ**.
-  NPC 1 dùng Minimax; NPC 2 dùng Heuristic Minimax; NPC 3 dùng Alpha-Beta;
-  NPC 4 dùng Heuristic Alpha-Beta.
-- **AI BATTLE:** chọn hai AI để đấu với nhau, không có lựa chọn Human.
-
-## Giao diện Battle City cổ điển
-
-Nền đen, thanh thông tin xám, font pixel và sprite gốc. Đạn nội suy mượt tới điểm
-va chạm, giữ nguyên thuật toán và luật 3 ô/vòng. [Xem ảnh và hoạt ảnh](CLASSIC_UI.md).
-
-## 35 map gốc đã chuyển đổi
-
-Chọn **AI BATTLE → MAP**, nhấn **O** để tới ORIGINAL_01; trái/phải chọn đến ORIGINAL_35.
-Map 13 × 13 dùng định dạng AI hiện tại. [Định dạng và quy tắc chuyển địa hình](levels_ai/README.md).
+Bản mã nguồn gọn để nộp bài, dùng Python/Pygame. Giữ nguyên thuật toán và chức năng
+của bản trước khi dọn; bỏ ảnh minh họa, ghi chú trùng, dữ liệu cũ và các file test phát triển.
+Mô hình zero-sum, giải thích thuật toán và kết quả: [REPORT.md](REPORT.md).
 
 ## Cài đặt và chạy
 
-Cần Python 3.10 trở lên. Giải nén mã nguồn, mở terminal trong thư mục chứa `tanks.py`:
+Cần Python 3.10 trở lên. Mở terminal tại thư mục chứa `tanks.py`:
 
 ```sh
 python -m pip install -r requirements.txt
 python tanks.py
 ```
 
-Trong AI BATTLE: **B** đổi ngân sách ở setup; **Tab** xem phân tích tìm kiếm,
-**V** xem hướng súng, **P** dừng, **N** đi một hành động.
-Mũi tên: di chuyển/xoay; Space: bắn; X: bỏ lượt ở chế độ người chơi.
-Trận đấu vận hành theo lượt. P tạm dừng, R chơi lại, Esc quay lại thiết lập.
+Giữ nguyên các thư mục tài nguyên khi nộp/chạy; chỉ lấy bốn file thuật toán sẽ không
+chạy được giao diện. Game tải `images/sprites.gif`, font và âm thanh khi khởi tạo.
 
-Chi tiết luật trận, lớp kết nối và cách kiểm tra: [AI_BATTLE_README.md](AI_BATTLE_README.md).
-Giữ bốn cấu hình đúng bản chất; đã đồng bộ luật hòa, tối ưu tìm kiếm và bổ sung thống kê.
-Xem [mô hình đối kháng, bảng phân tích UI và kiểm chứng](ADVERSARIAL_SEARCH.md).
-Ở trận 1 chọi 4, mỗi NPC dùng bản chiếu trạng thái hai xe để giữ nguyên thuật toán gốc;
-các NPC khác được xem là vật cản khi lập kế hoạch. Đây không phải tìm kiếm đầy đủ năm tác nhân.
+## Các file chính
 
-## Map so sánh trước và sau heuristic
+| File | Vai trò |
+| --- | --- |
+| `task2/search.py` | Minimax, Alpha-Beta, bảng chuyển vị, tìm sâu dần |
+| `task2/heuristics.py` | Utility thắng/thua và đánh giá heuristic |
+| `task2/game.py` | Trạng thái, hành động, chuyển trạng thái, đạn, HP, kết thúc |
+| `task2/agent.py` | SearchAgent, API agent và điều phối trận |
+| `tanks.py` | Điểm chạy chương trình, menu classic và khởi tạo tài nguyên |
+| `ai_battle.py` | UI chọn thuật toán/map, trận AI và bảng phân tích |
+| `presentation.py` | Hoạt ảnh đạn; không điều khiển quyết định của AI |
+| `task2/benchmark.py` | Đăng ký map và đo bốn cấu hình trên cùng trạng thái |
+| `task2/tournament.py` | Đối đầu đổi bên theo cùng độ sâu/cùng thời gian |
+| `task2/demo_maps.py`, `task2/asymmetric_map.py` | Map minh họa và bất đối xứng |
+| `task2/original_maps.py` | Chuyển/đọc 35 map gốc |
+| `task2/external_greedy.py` | AI mẫu để thử nhập thuật toán ngoài qua F5 |
+| `arena.py` | Phần mở rộng một người đấu 4 NPC |
 
-Trong AI BATTLE, chọn **H_DETOUR** (đường vòng) hoặc **H_DODGE** (né đạn).
-Xem cách chạy và kết quả đối chiếu tại [DEMO_MAPS.md](DEMO_MAPS.md).
+## Các thư mục cần giữ
 
-```sh
-python task2/compare_heuristics.py --depth 4
+```text
+fonts/          Font pixel
+images/         Chỉ còn sprites.gif được game sử dụng
+sounds/         Âm thanh được nạp khi mở game
+levels/         Nguồn 35 map gốc, phục vụ bộ chuyển đổi
+levels_ai/      35 map đã chuyển + manifest, được AI BATTLE sử dụng
+experiments/    CSV và môi trường đo để đối chiếu yêu cầu thực nghiệm
 ```
 
-## Map bất đối xứng
+`levels/` cần cho việc chuyển lại bản đồ; game AI đọc bản chuyển trong `levels_ai/`.
+Quy tắc nước/cỏ/băng và vị trí xe: [levels_ai/README.md](levels_ai/README.md).
+Cách đọc số liệu và chạy lại thí nghiệm: [experiments/README.md](experiments/README.md).
 
-Chọn **AI BATTLE → MAP → ASYMMETRIC** để dùng map 11 × 11, xe P0 dưới trái
-và xe P1 trên phải, khác cả hàng lẫn cột. Xem [sơ đồ và vị trí xuất phát](ASYMMETRIC_MAP.md).
+## Chế độ và điều khiển
 
-## Kiểm tra
+- **AI BATTLE:** hai AI; chọn MINIMAX, ALPHA-BETA, HEURISTIC MINIMAX hoặc
+  HEURISTIC ALPHA-BETA. Nhấn B ở setup chọn 60/120/250 ms hoặc FULL DEPTH.
+- **1 PLAYER:** bàn phím đấu 4 NPC. Phần này dùng bản chiếu hai xe cho mỗi NPC;
+  không phải tìm kiếm đối kháng đầy đủ năm tác nhân. Các map gốc nhập dành riêng cho AI BATTLE.
+- Setup: lên/xuống chọn dòng, trái/phải đổi giá trị, Enter bắt đầu, Esc quay lại.
+- Dòng MAP: O tới ORIGINAL_01, PageUp/PageDown nhảy 5 map, Home/End tới đầu/cuối.
+- Trong trận: P dừng, N đi một hành động, Tab phân tích, V đường ngắm, +/- tốc độ,
+  R chơi lại, Esc về setup. Hoạt ảnh lượt đã áp dụng được phát hết khi dừng.
+- Người chơi: mũi tên di chuyển/xoay, Space bắn, X bỏ lượt.
+- F5 ở setup quét AI ngoài trong `task2/` hoặc thư mục `agents/` do bạn tạo.
+
+## Đo lại bốn cấu hình
 
 ```sh
-python -m unittest discover -s tests -p "test_*.py"
-python tests/smoke_modes.py
-python tests/smoke_analysis.py
+python task2/benchmark.py --scenarios h_detour h_dodge asymmetric --players both --depths 2 4 --repeats 3 --output benchmark_results.csv --summary benchmark_summary.csv
+python task2/tournament.py --scenarios h_dodge asymmetric --depth 3 --max-cycles 40 --output tournament_results.csv --summary tournament_summary.csv
 ```
+
+Hai map H_DETOUR/H_DODGE minh họa tìm đường vòng và né đạn; ASYMMETRIC đặt hai
+xe lệch hàng/cột. ORIGINAL_01 … ORIGINAL_35 dùng địa hình chuyển từ map gốc.
+Giữ cùng điều kiện và đổi bên để so sánh; bản terminal-only có thể đứng bắn khi
+các phương án đồng điểm. Đây là giới hạn của baseline ở độ sâu thấp.
 
 ## Nguồn gốc
 
 Phát triển từ [raitisg/battle-city-tanks](https://github.com/raitisg/battle-city-tanks)
-và bản mã nguồn/AI do người dùng cung cấp.
+và mã nguồn/AI người dùng cung cấp. Tài nguyên gốc được giữ để chạy chương trình.

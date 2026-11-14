@@ -24,6 +24,15 @@ Bốn file lõi trong `task2/` được giữ nguyên từ bản ZIP đầu vào
 Ở trận 1 chọi 4, mỗi NPC dùng bản chiếu trạng thái hai xe để giữ nguyên thuật toán gốc;
 các NPC khác được xem là vật cản khi lập kế hoạch. Đây không phải tìm kiếm đầy đủ năm tác nhân.
 
+## Map so sánh trước và sau heuristic
+
+Trong AI BATTLE, chọn **H_DETOUR** (đường vòng) hoặc **H_DODGE** (né đạn).
+Xem cách chạy và kết quả đối chiếu tại [DEMO_MAPS.md](DEMO_MAPS.md).
+
+```sh
+python task2/compare_heuristics.py --depth 4
+```
+
 ## Kiểm tra
 
 ```sh

@@ -56,6 +56,8 @@ def build_scenarios():
     bullet.bullets.append(Bullet(6, 4, 1, 1))
     cases["bullet"] = bullet
 
+    from demo_maps import build_demo_maps
+    cases.update(build_demo_maps())
     return cases
 
 

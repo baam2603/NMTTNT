@@ -1,9 +1,24 @@
 {
+  "measured_at_utc": "2026-11-14T18:49:33.753760+00:00",
   "python": "3.12.14",
   "system": "Linux",
   "machine": "x86_64",
+  "current_profile": "after_basic_firing_route_v1",
+  "before_revision": "3ef0963c9c8e9ac90f9504c74899264070348e60",
+  "source_sha256": {
+    "task2/heuristics.py": "4ba2152de32301ccc98d13f9cc09459ff7605d236acdb5b30f77d92044df8f57",
+    "task2/search.py": "cad4d8202959d8aa4e89b8a8ae70b7d4a9718c452e6906dce1b9c148a31a6ef8",
+    "task2/game.py": "f7d23f9f6c0c5af4f3a77a072884d2091826abee53b5c94ba85f7d640b134037",
+    "task2/external_greedy.py": "9e303e25a613920b5c72d4ca037c1d2aa49a785b0e46d4ab328d17bf7fe7156e"
+  },
   "fixed_depth_search": {
-    "scenarios": 5,
+    "scenario_names": [
+      "default",
+      "open",
+      "walls",
+      "defense",
+      "bullet"
+    ],
     "players": [
       0,
       1
@@ -14,29 +29,36 @@
     ],
     "repeats": 3,
     "time_limit_ms": null,
-    "scenario_names": [
-      "default",
-      "open",
-      "walls",
-      "defense",
-      "bullet"
-    ]
+    "searches": 240
   },
   "fixed_depth_matches": {
-    "scenarios": 5,
-    "depth": 3,
-    "max_cycles": 60,
-    "matches": 60,
-    "swapped_seats": true,
     "scenario_names": [
       "default",
       "open",
       "walls",
       "defense",
       "bullet"
-    ]
+    ],
+    "depth": 3,
+    "max_cycles": 60,
+    "time_limit_ms": null,
+    "matches": 60,
+    "swapped_seats": true
+  },
+  "behavior_before_after": {
+    "scenario_names": [
+      "default",
+      "walls",
+      "original_20"
+    ],
+    "depth": 3,
+    "max_cycles": 60,
+    "time_limit_ms": null,
+    "opponent": "external_greedy.GreedyAgent",
+    "matches": 48,
+    "swapped_seats": true,
+    "repeat_penalty": 0
   },
   "overtime_definition": "external wall time > 1.1 * time_limit_ms; cooperative soft deadline",
-  "notes": "Experiments ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements.",
-  "selection_note": "Retired custom/demo map measurements removed; remaining summaries recomputed without remeasuring timing. No equal-time measurements remain for the retained maps."
+  "notes": "Measurements ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements. Current fixed-depth CSVs were remeasured, not reused from the terminal-only baseline."
 }

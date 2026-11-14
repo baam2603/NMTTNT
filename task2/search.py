@@ -1,13 +1,13 @@
 """Four adversarial-search configurations with observable, bounded-depth decisions.
 
-Plain modes use terminal utility only. No hidden heuristic or scripted movement is
-injected into them. Equal values are resolved by the search's stable action order.
+Baseline modes use a cheap material/distance evaluator; advanced modes add tactical
+and routing estimates. Equal values use stable action order, never scripted moves.
 """
 from abc import ABC, abstractmethod
 from math import isfinite
 from time import perf_counter
 
-from heuristics import HeuristicEvaluator, TerminalEvaluator
+from heuristics import BasicEvaluator, HeuristicEvaluator
 
 INF = float('inf')
 
@@ -37,7 +37,7 @@ class SearchTimeout(Exception):
 
 class SearchAlgorithm(ABC):
     def __init__(self, evaluator=None, name=None, repeat_aware=False):
-        self.evaluator = evaluator if evaluator is not None else TerminalEvaluator()
+        self.evaluator = evaluator if evaluator is not None else BasicEvaluator()
         self.name = name or type(self).__name__.lower()
         self.repeat_aware = repeat_aware
         self.stats = _new_stats()
@@ -166,7 +166,8 @@ class SearchAlgorithm(ABC):
                     score = self._root_static[action]
             finally:
                 self._deadline = None
-        return action, dict(mode=self.name, depth=depth, depth_reached=reached,
+        return action, dict(mode=self.name, evaluator=getattr(self.evaluator, "name", "custom"),
+                            depth=depth, depth_reached=reached,
                             score=score, time_ms=(perf_counter() - start) * 1000,
                             timed_out=timed_out, fallback=reached == 0 and action is not None,
                             root_actions=rows, pv=pv, repeat_penalty=repeat_penalty,
@@ -258,8 +259,8 @@ class AlphaBeta(SearchAlgorithm):
 
 
 MODES = {
-    'minimax': (Minimax, TerminalEvaluator, False),
-    'alphabeta': (AlphaBeta, TerminalEvaluator, False),
+    'minimax': (Minimax, BasicEvaluator, False),
+    'alphabeta': (AlphaBeta, BasicEvaluator, False),
     'heuristic_minimax': (Minimax, HeuristicEvaluator, True),
     'heuristic_alphabeta': (AlphaBeta, HeuristicEvaluator, True),
 }

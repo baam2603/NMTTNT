@@ -91,6 +91,7 @@ def measure_one(state, scenario, player, depth, mode, repeat):
         "depth": depth,
         "repeat": repeat,
         "mode": mode,
+        "evaluator": info["evaluator"],
         "action": action.name,
         "score": info["score"],
         "time_ms": round(elapsed, 6),
@@ -136,6 +137,7 @@ def summarize(rows):
             "player": player,
             "depth": depth,
             "mode": mode,
+            "evaluator": samples[0].get("evaluator", "legacy"),
             "repeats": len(samples),
             "median_time_ms": round(median(x["time_ms"] for x in samples), 4),
             "mean_time_ms": round(mean(x["time_ms"] for x in samples), 4),
@@ -220,7 +222,7 @@ def main():
     print(f"Da luu: {args.output} ({len(rows)} lan chay)")
     print(f"Da luu: {args.summary} ({len(summary)} dong tong hop)")
     print("Luu y: Evals = so lan goi ham danh gia (leaves + order_evals).")
-    print("Plain modes use terminal-only utility; timed play uses actual depth_reached.")
+    print("MM/AB use BASIC; H-MM/H-AB use ADVANCED; timed play reports depth_reached.")
 
 
 if __name__ == "__main__":

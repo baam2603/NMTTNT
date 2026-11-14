@@ -1,7 +1,7 @@
 # NMTTNT — Tank Battle / Adversarial Search
 
-Bản mã nguồn gọn để nộp bài, dùng Python/Pygame. Giữ nguyên thuật toán và chức năng
-của bản trước khi dọn; bỏ ảnh minh họa, ghi chú trùng, dữ liệu cũ và các file test phát triển.
+Bản mã nguồn gọn để nộp bài, dùng Python/Pygame. Minimax/Alpha-Beta dùng đánh giá
+cơ bản hoặc nâng cao; giữ quy tắc game, giao diện classic và hoạt ảnh đạn.
 Mô hình zero-sum, giải thích thuật toán và kết quả: [REPORT.md](REPORT.md).
 
 ## Cài đặt và chạy
@@ -50,8 +50,8 @@ Cách đọc số liệu và chạy lại thí nghiệm: [experiments/README.md]
 
 ## Chế độ và điều khiển
 
-- **AI BATTLE:** hai AI; chọn MINIMAX, ALPHA-BETA, HEURISTIC MINIMAX hoặc
-  HEURISTIC ALPHA-BETA. Nhấn B ở setup chọn 60/120/250 ms hoặc FULL DEPTH.
+- **AI BATTLE:** hai AI; chọn MINIMAX (BASIC), ALPHA-BETA (BASIC), HEURISTIC
+  MINIMAX hoặc HEURISTIC ALPHA-BETA. Nhấn B ở setup chọn 60/120/250 ms hoặc FULL DEPTH.
 - **1 PLAYER:** bàn phím đấu 4 NPC. Phần này dùng bản chiếu hai xe cho mỗi NPC;
   không phải tìm kiếm đối kháng đầy đủ năm tác nhân. Các map gốc nhập dành riêng cho AI BATTLE.
 - Setup: lên/xuống chọn dòng, trái/phải đổi giá trị, Enter bắt đầu, Esc quay lại.
@@ -70,8 +70,26 @@ python task2/tournament.py --scenarios default open walls --depth 3 --max-cycles
 
 Các map kiểm tra gồm DEFAULT, OPEN, WALLS, DEFENSE và BULLET.
 ORIGINAL_01 … ORIGINAL_35 dùng địa hình chuyển từ map gốc.
-Giữ cùng điều kiện và đổi bên để so sánh; bản terminal-only có thể đứng bắn khi
-các phương án đồng điểm. Đây là giới hạn của baseline ở độ sâu thấp.
+Giữ cùng điều kiện và đổi bên để so sánh. Hai bản BASIC dùng HP + khoảng cách
+Manhattan tới căn cứ địch; hai bản nâng cao thêm đường tới vị trí bắn có xét hướng,
+chi phí phá gạch, đường ngắm và dự báo đạn. BASIC cũng là heuristic theo định nghĩa;
+không gọi nó là “không heuristic”. Nhấn Tab để thấy evaluator, điểm/cận và độ sâu thực.
+
+Bản terminal-only cũ vẫn dùng được làm đối chứng qua API, không đổi luật tìm kiếm:
+
+```python
+# Chạy tại thư mục task2/, hoặc thêm task2/ vào sys.path.
+from game import GameState
+from search import choose_action
+from heuristics import TerminalEvaluator
+
+action, info = choose_action(GameState.from_layout(), depth=4, mode="alphabeta",
+                             evaluator=TerminalEvaluator())
+```
+
+Bản đối chứng trả 0 ở trạng thái chưa kết thúc nên vẫn có thể chọn FIRE khi đồng
+điểm. BASIC còn hạn chế khi gặp đường vòng/thép; bản nâng cao tốn thêm chi phí đánh
+giá. Không cấu hình nào bảo đảm thắng hoặc luôn phải di chuyển mỗi lượt.
 
 ## Nguồn gốc
 

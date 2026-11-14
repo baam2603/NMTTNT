@@ -20,7 +20,8 @@ python tanks.py
   Vẫn có thể nạp AI bên ngoài bằng F5 như giao diện cũ.
 
 Chế độ 2 người chơi bàn phím đã được bỏ khỏi menu.
-Giữ màu sắc, sprite, kích thước cửa sổ và bố cục giao diện hiện có.
+Cửa sổ 480 × 416 dùng giao diện Battle City cổ điển, đạn được nội suy khi vẽ.
+[Xem ảnh, hoạt ảnh và cách điều khiển](CLASSIC_UI.md).
 
 ## Điều khiển
 

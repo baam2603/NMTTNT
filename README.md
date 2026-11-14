@@ -7,6 +7,11 @@ Game xe tăng dùng Python/Pygame, gồm hai chế độ:
   NPC 4 dùng Heuristic Alpha-Beta.
 - **AI BATTLE:** chọn hai AI để đấu với nhau, không có lựa chọn Human.
 
+## Giao diện Battle City cổ điển
+
+Nền đen, thanh thông tin xám, font pixel và sprite gốc. Đạn nội suy mượt tới điểm
+va chạm, giữ nguyên thuật toán và luật 3 ô/vòng. [Xem ảnh và hoạt ảnh](CLASSIC_UI.md).
+
 ## Cài đặt và chạy
 
 Cần Python 3.10 trở lên. Giải nén mã nguồn, mở terminal trong thư mục chứa `tanks.py`:

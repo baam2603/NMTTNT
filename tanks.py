@@ -195,12 +195,9 @@ class Bullet():
 		self.state = self.STATE_ACTIVE
 
 	def draw(self):
-		"""Draw bullet with a neon accent without changing collision geometry."""
+		"""Draw the original bullet sprite."""
 		global screen
 		if self.state == self.STATE_ACTIVE:
-			neon = (0, 225, 255) if self.owner == self.OWNER_PLAYER else (255, 42, 78)
-			pygame.draw.rect(screen, (130, 45, 190), self.rect.inflate(4, 4), 1)
-			pygame.draw.rect(screen, neon, self.rect.inflate(2, 2), 1)
 			screen.blit(self.image, self.rect.topleft)
 		elif self.state == self.STATE_EXPLODING:
 			self.explosion.draw()
@@ -664,14 +661,9 @@ class Tank():
 
 
 	def draw(self):
-		"""Draw tank with a subtle neon outline; movement and combat are unchanged."""
+		"""Draw the original tank sprite."""
 		global screen
 		if self.state == self.STATE_ALIVE:
-			# Side-specific accent: player tanks glow cyan, enemies glow hot pink/red.
-			neon = (0, 225, 255) if getattr(self, "side", 0) == 0 else (255, 55, 185)
-			glow_rect = self.rect.inflate(4, 4)
-			pygame.draw.rect(screen, (70, 30, 125), self.rect.inflate(6, 6), 1)
-			pygame.draw.rect(screen, neon, glow_rect, 1)
 			screen.blit(self.image, self.rect.topleft)
 			if self.shielded:
 				screen.blit(self.shield_image, [self.rect.left-3, self.rect.top-3])
@@ -1321,23 +1313,17 @@ class Game():
 		# Original pixel font is retained for legacy gameplay elements.
 		self.font = pygame.font.Font("fonts/prstart.ttf", 16)
 
-		# Neon cyberpunk palette (presentation only; gameplay/AI logic is untouched).
-		# Deep violet + electric blue + hot pink + signal red.
+		# Classic Battle City palette and bitmap type (presentation only).
 		self.ui = {
-			"bg": (8, 5, 24),
-			"panel": (20, 12, 45),
-			"panel2": (36, 18, 70),
-			"green": (0, 225, 255),        # electric cyan / blue
-			"green_dark": (104, 54, 190),  # neon violet
-			"orange": (255, 55, 185),      # hot pink
-			"text": (246, 239, 255),
-			"muted": (164, 145, 205),
-			"red": (255, 42, 78),          # signal red
+			"bg": (0, 0, 0), "panel": (0, 0, 0), "panel2": (48, 48, 48),
+			"green": (232, 184, 56), "green_dark": (104, 104, 104),
+			"orange": (200, 104, 40), "text": (248, 248, 248),
+			"muted": (168, 168, 168), "red": (208, 64, 40),
 		}
-		self.ui_font = pygame.font.SysFont("Arial", 14, bold=False)
-		self.ui_small = pygame.font.SysFont("Arial", 11, bold=True)
-		self.ui_heading = pygame.font.SysFont("Arial", 28, bold=True)
-		self.ui_title = pygame.font.SysFont("Arial", 35, bold=True)
+		self.ui_font = pygame.font.Font("fonts/prstart.ttf", 12)
+		self.ui_small = pygame.font.Font("fonts/prstart.ttf", 8)
+		self.ui_heading = pygame.font.Font("fonts/prstart.ttf", 16)
+		self.ui_title = pygame.font.Font("fonts/prstart.ttf", 32)
 
 		# pre-render game over text
 		self.im_game_over = pygame.Surface((64, 40))
@@ -1682,61 +1668,36 @@ class Game():
 		hint = self.ui_small.render("M: SOUND", True, c["muted"])
 		screen.blit(hint, hint.get_rect(center=(x + 32, 385)))
 	def drawIntroScreen(self, put_on_surface = True):
-		"""Modern tactical menu. Input and player selection are unchanged."""
-		global screen
-		c = self.ui
-		screen.fill(c["bg"])
-		# Subtle grid and framing
-		for gx in range(16, 480, 24):
-			pygame.draw.line(screen, (28, 15, 65), (gx, 0), (gx, 416), 1)
-		for gy in range(8, 416, 24):
-			pygame.draw.line(screen, (28, 15, 65), (0, gy), (480, gy), 1)
-		pygame.draw.rect(screen, c["green_dark"], (14, 14, 452, 388), 1, border_radius=8)
-		pygame.draw.rect(screen, c["panel"], (26, 25, 428, 62), border_radius=7)
-		# Brand block
-		pygame.draw.rect(screen, c["orange"], (39, 39, 5, 34), border_radius=2)
-		title = self.ui_title.render("BATTLE CITY", True, c["text"])
-		screen.blit(title, (55, 34))
-		sub = self.ui_small.render("TACTICAL ARMORED COMBAT  /  EST. 1985", True, c["green"])
-		screen.blit(sub, (57, 68))
-		# Tank showcase panel
-		pygame.draw.rect(screen, c["panel"], (36, 103, 408, 104), border_radius=7)
-		pygame.draw.rect(screen, c["green_dark"], (36, 103, 408, 104), 1, border_radius=7)
-		pygame.draw.circle(screen, (20, 12, 55), (100, 155), 39)
-		pygame.draw.circle(screen, c["green_dark"], (100, 155), 39, 1)
-		pygame.draw.circle(screen, (90, 55, 190), (100, 155), 33, 1)
-		screen.blit(self.player_image, self.player_image.get_rect(center=(100, 155)))
-		mission = self.ui_small.render("MISSION BRIEF", True, c["orange"])
-		screen.blit(mission, (158, 122))
-		line1 = self.ui_font.render("Defend the eagle. Eliminate hostile armor.", True, c["text"])
-		line2 = self.ui_font.render("Select player vs 4 NPCs or AI vs AI.", True, c["muted"])
-		screen.blit(line1, (158, 145))
-		screen.blit(line2, (158, 166))
-		# Selectable player-count rows
-		options = [(1, "01 PLAYER", "KEYBOARD VS 4 NPCs"), (2, "AI BATTLE", "2 AGENTS / AI VS AI ONLY")]
-		for idx, (number, label, desc) in enumerate(options):
-			y = 215 + idx * 43
-			selected = self.nr_of_players == number
-			pygame.draw.rect(screen, c["panel2"] if selected else c["panel"], (74, y, 332, 39), border_radius=5)
-			if selected:
-				pygame.draw.rect(screen, c["orange"], (74, y, 4, 39), border_radius=2)
-			marker = "▶" if selected else "·"
-			marker_s = self.ui_heading.render(marker, True, c["orange"] if selected else c["muted"])
-			screen.blit(marker_s, (88, y + 4))
-			text_s = self.ui_font.render(label, True, c["text"] if selected else c["muted"])
-			screen.blit(text_s, (123, y + 5))
-			desc_s = self.ui_small.render(desc, True, c["green"] if selected else c["muted"])
-			screen.blit(desc_s, (123, y + 23))
-		# Footer / controls
-		footer = self.ui_small.render("↑  ↓  SELECT     ENTER  DEPLOY     Q  QUIT", True, c["muted"])
-		screen.blit(footer, footer.get_rect(center=(240, 352)))
-		hiscore = self.loadHiscore()
-		hi = self.ui_small.render("BEST SCORE  " + str(hiscore), True, c["orange"])
-		screen.blit(hi, hi.get_rect(center=(240, 370)))
-		copy = self.ui_small.render("BATTLE CITY  /  TACTICAL TRAINING SIMULATOR", True, c["muted"])
-		screen.blit(copy, copy.get_rect(center=(240, 388)))
+		"""Classic brick-letter title; keep the existing two game modes."""
+		global screen, sprites
+		screen.fill((0, 0, 0))
+		white = (248, 248, 248)
+		def centered(text, font, y, color=white):
+			image = font.render(text, False, color)
+			screen.blit(image, image.get_rect(center=(240, y)))
+		centered("HI- " + str(self.loadHiscore()), self.ui_heading, 43)
+		large = pygame.font.Font("fonts/prstart.ttf", 56)
+		brick = sprites.subsurface((96, 128, 16, 16))
+		for title, y in (("BATTLE", 91), ("CITY", 163)):
+			mask = large.render(title, False, white).convert_alpha()
+			letters = pygame.Surface(mask.get_size(), pygame.SRCALPHA)
+			for by in range(0, mask.get_height(), 16):
+				for bx in range(0, mask.get_width(), 16):
+					letters.blit(brick, (bx, by))
+			letters.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+			screen.blit(letters, letters.get_rect(midtop=(240, y)))
+		for value, title, hint, y in ((1, "1 PLAYER", "KEYBOARD VS 4 NPCS", 264),
+									 (2, "AI BATTLE", "2 SEARCH AGENTS", 308)):
+			label = self.ui_heading.render(title, False, white)
+			screen.blit(label, (157, y))
+			screen.blit(self.ui_small.render(hint, False, (168, 168, 168)), (157, y + 21))
+			if self.nr_of_players == value:
+				screen.blit(self.player_image, (117, y - 2))
+		centered("BATTLE CITY / AI EDITION", self.ui_small, 372)
+		centered("UP/DOWN SELECT   ENTER START   Q QUIT", self.ui_small, 397)
 		if put_on_surface:
 			pygame.display.flip()
+
 	def animateIntroScreen(self):
 		""" Slide intro (menu) screen from bottom to top
 		If Enter key is pressed, finish animation immediately

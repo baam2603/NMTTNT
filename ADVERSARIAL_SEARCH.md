@@ -46,6 +46,9 @@ Tham số phạt lặp cũ vẫn có trong API cho thử nghiệm riêng, không
 
 ## Xem trực tiếp quyết định trên UI
 
+Bố cục classic và hoạt ảnh đạn: [CLASSIC_UI.md](CLASSIC_UI.md).
+Thanh bên viết 1P/2P tương ứng P0/P1; Tab giữ bảng phân tích đầy đủ.
+
 ![Bảng phân tích tìm kiếm](images/screens/search-analysis.png)
 
 1. Trong setup chọn hai thuật toán, độ sâu và map.
@@ -59,7 +62,7 @@ Tham số phạt lặp cũ vẫn có trong API cho thử nghiệm riêng, không
    tỉa, **không phải điểm chính xác của nhánh đó**. Dấu `>` đánh dấu nước đã chọn.
 6. **PREDICTED LINE** là chuỗi nước dự đoán trong cây, không ép đối thủ thực hiện
    chuỗi đó. Mỗi bên sẽ tìm kiếm lại khi tới lượt. Một depth là một hành động.
-7. **V** bật/tắt nét đứt chỉ hướng bắn hiện tại tới vật cản đầu tiên; nét liền là
+7. **V** bật/tắt nét đứt (mặc định tắt trong giao diện classic) chỉ hướng bắn hiện tại tới vật cản đầu tiên; nét liền là
    chuyển động vừa xảy ra. Các đường này không thay thế việc mô phỏng đạn.
 8. `+/-` thay tốc độ trình diễn, **R** chơi lại, **Esc** về setup.
 

@@ -58,14 +58,19 @@ class Task2Backend(object):
         self.search = search_mod
         try:
             import benchmark as benchmark_mod
-            self._build_scenarios = benchmark_mod.build_scenarios
-            self.maps = ["default"] + [n for n in self._build_scenarios() if n != "default"]
+            self._build_scenarios = lambda: benchmark_mod.build_scenarios(include_original=False)
+            from original_maps import original_map_names
+            self.maps = (["default"] + [n for n in self._build_scenarios() if n != "default"]
+                         + original_map_names())
         except Exception:
             self._build_scenarios = None
             self.maps = ["default"]
 
     # ---- ban do ----
     def new_state(self, map_name):
+        if map_name.startswith("original_"):
+            from original_maps import load_original_level
+            return load_original_level(int(map_name.split("_")[1]))
         if map_name != "default" and self._build_scenarios is not None:
             return self._build_scenarios()[map_name]
         return self.game.GameState.from_layout()
@@ -348,6 +353,9 @@ class AIBattle(object):
             return
         try:
             self.backend = Task2Backend(path)
+            if self.human_mode:
+                # The imported originals are adapted for the requested two-AI duel.
+                self.backend.maps = [n for n in self.backend.maps if not n.startswith("original_")]
             self._refresh_options()
         except Exception as exc:  # noqa: BLE001
             self.backend_error = "Khong nap duoc task2:\n%s" % exc
@@ -515,6 +523,13 @@ class AIBattle(object):
                     self.row = (self.row + 1) % len(rows)
                 elif event.key in (pg.K_LEFT, pg.K_RIGHT):
                     self._change_row(rows[self.row], 1 if event.key == pg.K_RIGHT else -1)
+                elif event.key == pg.K_o and rows[self.row] == "MAP":
+                    self.sel_map = next((i for i,n in enumerate(self.backend.maps)
+                                         if n.startswith("original_")), self.sel_map)
+                elif event.key in (pg.K_PAGEUP, pg.K_PAGEDOWN) and rows[self.row] == "MAP":
+                    self._change_row("MAP", -5 if event.key == pg.K_PAGEUP else 5)
+                elif event.key in (pg.K_HOME, pg.K_END) and rows[self.row] == "MAP":
+                    self.sel_map = 0 if event.key == pg.K_HOME else len(self.backend.maps)-1
                 elif event.key == pg.K_F5:
                     self._refresh_options_keep_selection()
                 elif event.key == pg.K_b:
@@ -595,6 +610,11 @@ class AIBattle(object):
                 label = self.f_head.render("START MATCH", True, c["orange"] if selected else c["muted"])
                 scr.blit(label, label.get_rect(center=(240, y + h // 2)))
             y += h + 6
+        if rows[self.row] == "MAP" and not self.setup_msg:
+            hint = "PGUP/PGDN: 5 MAPS   HOME/END: FIRST/LAST"
+            if not self.human_mode:
+                hint = "O: ORIGINALS   PGUP/PGDN: 5 MAPS   HOME/END"
+            self._text(self.f_small, hint, c["muted"], (240,358), center=True)
         if self.setup_msg:
             msg = self._fit(self.f_small, self.setup_msg, 420)
             self._text(self.f_small, msg, c["red"], (240, 358), center=True)
@@ -806,7 +826,7 @@ class AIBattle(object):
                 self._text(self.f_small,self._fit(self.f_small,line,56),black,(x0+4,y+94+i*12))
         pg.draw.line(scr,(80,80,80),(x0+4,306),(477,306))
         self._text(self.f_small,'MAP',black,(x0+4,314))
-        self._text(self.f_small,self._fit(self.f_small,self.backend.maps[self.sel_map].upper(),56),black,(x0+4,326))
+        self._text(self.f_small,self._fit(self.f_small,self.backend.maps[self.sel_map].upper().replace("ORIGINAL_", "LV"),56),black,(x0+4,326))
         self._text(self.f_small,'R %03d'%m.state.cycle,black,(x0+4,344))
         self._text(self.f_small,'SPD %d'%(self.speed+1),black,(x0+4,358))
         status='ERROR' if m.error else 'OVER' if m.is_over() else 'PAUSE' if self.paused else 'THINK' if m.thinking else 'READY'

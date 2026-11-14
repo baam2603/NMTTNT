@@ -77,8 +77,8 @@ class PlaybackTest(unittest.TestCase):
     def test_replay_matches_engine_on_maps_and_four_npc_extension(self):
         rng=random.Random(20261114)
         count=0
-        for initial in build_scenarios().values():
-            for arena in (False,True):
+        for name,initial in build_scenarios().items():
+            for arena in ((False,) if name.startswith('original_') else (False,True)):
                 state=ArenaState.from_state(initial) if arena else initial.copy()
                 playback=BulletPlayback(game);playback.reset(state)
                 now=0

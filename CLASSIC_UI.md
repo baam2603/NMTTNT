@@ -1,6 +1,6 @@
 # Giao diện cổ điển và hoạt ảnh đạn
 
-Bản cập nhật này chỉ sửa trình bày. Toàn bộ các file Python trong `task2/` và
+Bản cập nhật này chỉ sửa trình bày. Các file `search.py`, `heuristics.py`, `game.py`, `agent.py` trong `task2/` và
 `arena.py` giữ nguyên từng byte so với commit `1481095`: thuật toán, evaluator,
 ngân sách tìm kiếm, HP, tốc độ 3 ô/vòng, va chạm và map không thay đổi.
 

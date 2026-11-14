@@ -19,6 +19,7 @@ backend=Task2Backend(root/'task2')
 random.seed(42)
 # All layouts spawn four distinct NPCs. Random legal actions exercise rounds and damage.
 for name,base in build_scenarios().items():
+ if name.startswith('original_'):continue  # Original levels are exposed only for AI duels.
  s=ArenaState.from_state(base)
  assert len(set((t.r,t.c) for t in s.tanks))==5
  for _ in range(250):
@@ -50,6 +51,7 @@ for human in (True,False):
  battle._draw_setup(['P0','D0','P1','D1','MAP','START'])
  assert battle._start_match(),battle.setup_msg
  if human:
+  assert not any(n.startswith('original_') for n in battle.backend.maps)
   assert len(battle.match.state.tanks)==5
   assert [a.mode for a in battle.match.agents[1:]]==list(NPC_MODES)
  else: assert all(a is not None for a in battle.match.agents)

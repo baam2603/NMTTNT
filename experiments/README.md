@@ -45,7 +45,7 @@ không trộn số liệu này với so sánh cùng độ sâu. Overtime đếm 
 ## Chạy lại từ thư mục chứa tanks.py
 
 ```sh
-python task2/benchmark.py --scenarios all --players both --depths 2 4 --repeats 3 --output experiments/search_fixed_depth.csv --summary experiments/search_fixed_depth_summary.csv
+python task2/benchmark.py --scenarios default open walls defense bullet h_detour h_dodge asymmetric --players both --depths 2 4 --repeats 3 --output experiments/search_fixed_depth.csv --summary experiments/search_fixed_depth_summary.csv
 python task2/tournament.py --scenarios default open walls defense bullet h_detour h_dodge asymmetric --depth 3 --max-cycles 60 --output experiments/tournament_fixed_depth.csv --summary experiments/tournament_fixed_depth_summary.csv
 python task2/tournament.py --scenarios h_dodge asymmetric --depth 6 --time-limit-ms 30 --max-cycles 20 --output experiments/tournament_equal_time.csv --summary experiments/tournament_equal_time_summary.csv
 ```
@@ -54,3 +54,6 @@ Kết quả này chỉ nói về các trạng thái xuất phát, map, độ sâ
 chọn. Các map minh họa có tình huống thiết kế để làm rõ evaluator, không phải mẫu
 ngẫu nhiên của mọi map. Số liệu không chứng minh heuristic luôn thắng hoặc luôn
 nhanh hơn. Tìm kiếm sâu hữu hạn không bảo đảm tối ưu cả trận.
+
+Map ORIGINAL_01 … ORIGINAL_35 được nhập sau đợt đo tham khảo này. Các CSV trên
+không chứa kết quả của map nhập mới; lệnh tái hiện đã liệt kê rõ 8 map cũ.

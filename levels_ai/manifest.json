@@ -1,0 +1,1296 @@
+{
+  "format": 1,
+  "source_size": [
+    26,
+    26
+  ],
+  "target_size": [
+    13,
+    13
+  ],
+  "block_size": 2,
+  "hash_normalization": "UTF-8 with LF line endings",
+  "priority": [
+    "steel_or_water",
+    "brick",
+    "empty"
+  ],
+  "mapping": {
+    "#": "W",
+    "@": "S",
+    "~": "S",
+    "%": ".",
+    "-": ".",
+    ".": "."
+  },
+  "levels": {
+    "1": {
+      "layout": "01.txt",
+      "source": "levels/1",
+      "source_sha256": "164cdb011387c90fe969a52142d4305bcae59e06090f9d07b547c6ab0ea36016",
+      "layout_sha256": "ad3d4035bf866e67b90ed69264b6ac0967344fb7de30a399a5c854fa67a56ebd",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 220,
+        ".": 448,
+        "@": 8
+      }
+    },
+    "2": {
+      "layout": "02.txt",
+      "source": "levels/2",
+      "source_sha256": "3f6a53507d993cb17cd7759cffc8bd3783fa02d230f9ce53dccf0395ab205818",
+      "layout_sha256": "54c64933bf6638a9a5b42b5caebc2e0a45758a43199eddf8076798a25b325b01",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 184,
+        "%": 40,
+        ".": 404,
+        "@": 48
+      }
+    },
+    "3": {
+      "layout": "03.txt",
+      "source": "levels/3",
+      "source_sha256": "e4704dc219fb0ca6ac9801b5d856959dfd65e98ff4464d271bdde2bf4bcdddc3",
+      "layout_sha256": "4a10ef728ae73d0793a0de5607e3edc61ea3f77ca7a6e7d4030f1f27b88fa324",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 126,
+        "%": 152,
+        ".": 372,
+        "@": 26
+      }
+    },
+    "4": {
+      "layout": "04.txt",
+      "source": "levels/4",
+      "source_sha256": "21b3a909c2f03172ad10f1a7adb8625382efa9e12f1083559fb61ecd4632266a",
+      "layout_sha256": "2c7413ed3a98d9d146a1ecae1079f9023f17284d04e4158b1034ac1611ea062d",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 262,
+        "%": 56,
+        ".": 330,
+        "@": 16,
+        "~": 12
+      }
+    },
+    "5": {
+      "layout": "05.txt",
+      "source": "levels/5",
+      "source_sha256": "647622ff05977fd3158c9f2ca60242e8b1b223efafc09cadf482777dc4501dab",
+      "layout_sha256": "9afdafde9c58d5801065f9452b75b1bba7847624bb08938f6d11c8984b32aa03",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 136,
+        ".": 454,
+        "@": 26,
+        "~": 60
+      }
+    },
+    "6": {
+      "layout": "06.txt",
+      "source": "levels/6",
+      "source_sha256": "77b72a0af93b1530c4410d0ce363d6d21760b61f63f16d9809798ee12f20f043",
+      "layout_sha256": "d25bf157dc5d8c72c6c83e31c238740d7b3a8364dc13bc89b84681d753a4a526",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 148,
+        "%": 100,
+        ".": 396,
+        "@": 32
+      }
+    },
+    "7": {
+      "layout": "07.txt",
+      "source": "levels/7",
+      "source_sha256": "7061375c3ddb251d0b9e9e86170852e985a7f232c15f61e57c67b1c28e824828",
+      "layout_sha256": "4eabdbe172199113b7578fc8fc24e92e07eb9d188c9957d4f5ebb294fc20e072",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 8,
+        "%": 28,
+        ".": 466,
+        "@": 174
+      }
+    },
+    "8": {
+      "layout": "08.txt",
+      "source": "levels/8",
+      "source_sha256": "601aceef0295112f57784df32027859cf6067cce82d6459b66fc801e1d8dbe2d",
+      "layout_sha256": "198a9cf912e3087163fdd5a28ac4a7ece2b9db429bc4bb12f976b863fe5a1a0b",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 152,
+        "%": 60,
+        ".": 356,
+        "@": 20,
+        "~": 88
+      }
+    },
+    "9": {
+      "layout": "09.txt",
+      "source": "levels/9",
+      "source_sha256": "71c6431ba857f489f70387322866a5b78d61364fa080ae1621d49d0b11d26a48",
+      "layout_sha256": "99104546a036454ab94b5380efad72e47ccf6bf4595ab52aa223e7eda30f29dd",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 64,
+        "%": 72,
+        ".": 448,
+        "@": 92
+      }
+    },
+    "10": {
+      "layout": "10.txt",
+      "source": "levels/10",
+      "source_sha256": "023e324e7ba8b3f1dbd715ec67d55eed14fb7d739adc01c224686a2ebf76ab99",
+      "layout_sha256": "bf1b064c2c976f4e75e704f2117b817bc30ff10b97d2f04df0e807d1e0755584",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 218,
+        "%": 112,
+        ".": 282,
+        "@": 40,
+        "~": 24
+      }
+    },
+    "11": {
+      "layout": "11.txt",
+      "source": "levels/11",
+      "source_sha256": "f8d7fec06fe39d61bedbb27273a5a95c30cfd01aa6c783b97b2e47dd7721f77e",
+      "layout_sha256": "9ea6054df2d451e7a4c0476c5ecf93206d1559ca199bbc331d8e2c2cf19f3ccc",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 156,
+        "%": 156,
+        ".": 326,
+        "@": 38
+      }
+    },
+    "12": {
+      "layout": "12.txt",
+      "source": "levels/12",
+      "source_sha256": "c9cf4513cd36a90bea74c2cd73fcc72860518e26831417db3cc8564251ee71c4",
+      "layout_sha256": "362a68c78a867237363ba142c37c6fc8d51894ffdf4978ac9623bc6377e3c555",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 146,
+        ".": 418,
+        "@": 28,
+        "~": 84
+      }
+    },
+    "13": {
+      "layout": "13.txt",
+      "source": "levels/13",
+      "source_sha256": "dd80e17c631455b57ef67ddf77493bda4fab63c9e0915add35b334e51be5fd54",
+      "layout_sha256": "3540061c5687a69fb6256243956a992997e4cfa7a24d4b5b7f82519f8f92c4e4",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 204,
+        "%": 56,
+        ".": 368,
+        "@": 48
+      }
+    },
+    "14": {
+      "layout": "14.txt",
+      "source": "levels/14",
+      "source_sha256": "c2c975c1cc1bf5d6f168f4974262ddebe9e1f36ac29d1492e65a8d85f3b5ddf7",
+      "layout_sha256": "3b9b7709983841b8808ed658f072575359e909eab71c6dd85fa369a7b3c25523",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 172,
+        "%": 80,
+        ".": 372,
+        "@": 28,
+        "~": 24
+      }
+    },
+    "15": {
+      "layout": "15.txt",
+      "source": "levels/15",
+      "source_sha256": "408d024a9f68c6732d58465ef7db57c05d8e14fae217f81a4d89dc2b28b8da36",
+      "layout_sha256": "858b02e879dd3611ee5a46e80f30c293731b50cfbea65db37236eed3e1a26bc1",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 194,
+        "%": 204,
+        ".": 260,
+        "@": 18
+      }
+    },
+    "16": {
+      "layout": "16.txt",
+      "source": "levels/16",
+      "source_sha256": "e771ab2f59d374ab40533d9e9ed428713852c312a6c273401f851a0181f0f0da",
+      "layout_sha256": "32a347056c94ab99a21ac4d6c7898adda71e3b3ab8b5b456a347dda3398cd4aa",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 42,
+        "%": 176,
+        ".": 428,
+        "@": 30
+      }
+    },
+    "17": {
+      "layout": "17.txt",
+      "source": "levels/17",
+      "source_sha256": "068278a8b6ecde860dd25217753c2b521cec090c8ecde4548ef60380f75309e9",
+      "layout_sha256": "97771e0f19851e98cf2b1cc39a3fa658c028f768c45331c517be8e1a4f507c72",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 164,
+        "-": 206,
+        ".": 286,
+        "@": 20
+      }
+    },
+    "18": {
+      "layout": "18.txt",
+      "source": "levels/18",
+      "source_sha256": "cbe6214205af44f952ff35ddbc4be857a4d7d01a272733a24dd39a7791ddddd9",
+      "layout_sha256": "7bdefe62df917ad319d44eb49fda25c5cb6ded6bd812bfb1badea029c7c6b9c2",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 140,
+        "%": 40,
+        ".": 376,
+        "@": 120
+      }
+    },
+    "19": {
+      "layout": "19.txt",
+      "source": "levels/19",
+      "source_sha256": "84f4e508b2b59cddfad08c68f61a6a157fa231be55f648b592cbad106c3c3e4c",
+      "layout_sha256": "cec5117ad59dd79604e6408e08aca19c6e4b59502dff679cc04cbef883312ffd",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 180,
+        "%": 124,
+        ".": 342,
+        "@": 30
+      }
+    },
+    "20": {
+      "layout": "20.txt",
+      "source": "levels/20",
+      "source_sha256": "25e684bfea25d703d13f8d0e15d72743aa4dd06e51114e8d75628e4b33a3081b",
+      "layout_sha256": "40497f03b13ca3e1276eb2016d54793a94592d5f2eb707faed5e513c2086c414",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 120,
+        "%": 64,
+        ".": 402,
+        "@": 26,
+        "~": 64
+      }
+    },
+    "21": {
+      "layout": "21.txt",
+      "source": "levels/21",
+      "source_sha256": "7e94cf7488fd8e1b7cd8caeec517e6a558068259f8a3d648d4d7db81f39845b6",
+      "layout_sha256": "293a6030297c17171797bf2da2129c8ee0a0f46b53c7c6fba9c9ed0e74170b3f",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 202,
+        "%": 152,
+        ".": 270,
+        "@": 52
+      }
+    },
+    "22": {
+      "layout": "22.txt",
+      "source": "levels/22",
+      "source_sha256": "5170b317e56f735031b8987e5fca482f605d7a621adf36f9a6f6ba9242c59297",
+      "layout_sha256": "d201d9aedf4e94f543c0679be2ce9050881f2c555096123a7f630372e3d5c9af",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 52,
+        "%": 200,
+        ".": 396,
+        "@": 28
+      }
+    },
+    "23": {
+      "layout": "23.txt",
+      "source": "levels/23",
+      "source_sha256": "4750c89c81e74e3ba952826a8010fecee9d5213bdd1ffb9d25a971a358bf5b54",
+      "layout_sha256": "92f23fa07f133bc96383b6cd1939ed19acd39cf6ea6467ef01b1cae3a26b11cf",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 16,
+        "%": 84,
+        ".": 478,
+        "@": 98
+      }
+    },
+    "24": {
+      "layout": "24.txt",
+      "source": "levels/24",
+      "source_sha256": "d6aa19cb2dfb87fa5eb2645380eee7daa21c018b7a250949128d3cd3e11af1e1",
+      "layout_sha256": "ba2baaa7bceca373c46c35804db648a66a627512d2b815d801317ce6c4f35138",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 132,
+        "%": 48,
+        "-": 216,
+        ".": 258,
+        "@": 22
+      }
+    },
+    "25": {
+      "layout": "25.txt",
+      "source": "levels/25",
+      "source_sha256": "ed5c82f4f467d1a069b960fa54f3536395117be0bb5064205ee75a94fa759a44",
+      "layout_sha256": "c8310428a2e8c1be85a0f012bbfa3ddc2b8d92b0d37e3ef90813926329fa0b17",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 204,
+        ".": 388,
+        "@": 84
+      }
+    },
+    "26": {
+      "layout": "26.txt",
+      "source": "levels/26",
+      "source_sha256": "30961b9aca9c04fcd76d6fff54e0b668db43e60f5eca94f15574fb5e48608faa",
+      "layout_sha256": "117e5335f3971510267a83a4b5a94e96761c5e2f5cebe83df1ded2aa1d17d120",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 40,
+        "%": 88,
+        ".": 436,
+        "@": 64,
+        "~": 48
+      }
+    },
+    "27": {
+      "layout": "27.txt",
+      "source": "levels/27",
+      "source_sha256": "1727d0a1e6df569270eae3170c95640175a0700edc5107cd7096e15ebd9d96f8",
+      "layout_sha256": "beef4bc8a8346422e72bcf3ce87aae3079de5faa41a9d6b7ea5a934d12a6965e",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 60,
+        "%": 48,
+        ".": 392,
+        "@": 176
+      }
+    },
+    "28": {
+      "layout": "28.txt",
+      "source": "levels/28",
+      "source_sha256": "e656893bcc5b0606a4554c722f5e0a82508e35a2082d956ba92f9c1803299a19",
+      "layout_sha256": "e37121c44a93e95d18257089905a909792b2b5f2a8911d6749f94fa450df3a82",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 38,
+        "%": 128,
+        "-": 212,
+        ".": 278,
+        "@": 20
+      }
+    },
+    "29": {
+      "layout": "29.txt",
+      "source": "levels/29",
+      "source_sha256": "6c2b3e7b0dc606f4973cf8c171e9666398ab25f842c337519a027573e3e4ffad",
+      "layout_sha256": "47bcab57a79cb5dcda39562b8e7e4d2391e157fdc7a24412ae3679d6bce29597",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 64,
+        "%": 88,
+        ".": 392,
+        "@": 36,
+        "~": 96
+      }
+    },
+    "30": {
+      "layout": "30.txt",
+      "source": "levels/30",
+      "source_sha256": "b1166b8c16f8f0754efe4f459c446025d6dadf7f04c083d9a268fd5de07b9319",
+      "layout_sha256": "0db70e90dfdc5c5e6d28e3a8367f572d575b1061ed77b7db1fb22cc25fdbf281",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 44,
+        "%": 320,
+        ".": 244,
+        "@": 28,
+        "~": 40
+      }
+    },
+    "31": {
+      "layout": "31.txt",
+      "source": "levels/31",
+      "source_sha256": "9353395e793540e1f737dbb2bd9b5d5d16eadcb57d6171dc946522b6d23917eb",
+      "layout_sha256": "d4ebb9d406ac4ff0ae31c491817cea382b8c852bf8cf21329705965d361651d1",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 52,
+        "%": 80,
+        ".": 300,
+        "@": 4,
+        "~": 240
+      }
+    },
+    "32": {
+      "layout": "32.txt",
+      "source": "levels/32",
+      "source_sha256": "ff7f5caea700bb221b17c2535dcbdf0dab4190ddca202d618ea5461ee43b03ed",
+      "layout_sha256": "248c87530600c28980410841e1ad52909e46c7f3c3144f951d74862346745a6a",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 138,
+        "-": 320,
+        ".": 196,
+        "@": 22
+      }
+    },
+    "33": {
+      "layout": "33.txt",
+      "source": "levels/33",
+      "source_sha256": "5f86ea282a644ea079aca109cf0bc49bd7eaf2c28456ef89c064c6af46eb73df",
+      "layout_sha256": "eade84dd18ef55523ac01fcd68cf61b6dfa73cff1ae83790b165d320afb0f5eb",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 8,
+        "%": 108,
+        ".": 440,
+        "@": 120
+      }
+    },
+    "34": {
+      "layout": "34.txt",
+      "source": "levels/34",
+      "source_sha256": "6be3191950b918274bba89bb4f10ff38d3d67dcfbe29c9d1a03741cfc962b957",
+      "layout_sha256": "c9636e5c8d91e38cb5a33cd7941093a30e131ddd0f16bb42da8162c83d57cde7",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 251,
+        ".": 425
+      }
+    },
+    "35": {
+      "layout": "35.txt",
+      "source": "levels/35",
+      "source_sha256": "f6535d7609075e423998e81685732e22702cc392abdde3fd669501c71ab0c8c8",
+      "layout_sha256": "a51219f46ac1f02361716fff32e90b40f63df38b16b890a43449f4d58fe0245a",
+      "tank_pos": [
+        [
+          12,
+          4
+        ],
+        [
+          0,
+          12
+        ]
+      ],
+      "base_pos": [
+        [
+          12,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "directions": [
+        0,
+        1
+      ],
+      "source_counts": {
+        "#": 200,
+        "%": 112,
+        ".": 260,
+        "@": 8,
+        "~": 96
+      }
+    }
+  }
+}

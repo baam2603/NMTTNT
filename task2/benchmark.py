@@ -27,7 +27,7 @@ def make_map(walls=(), steel=()):
     return ["".join(row) for row in grid]
 
 
-def build_scenarios():
+def build_scenarios(include_original=True):
     cases = {"default": GameState.from_layout()}
 
     cases["open"] = GameState.from_layout(
@@ -60,6 +60,9 @@ def build_scenarios():
     cases.update(build_demo_maps())
     from asymmetric_map import build_asymmetric_map
     cases["asymmetric"] = build_asymmetric_map()
+    if include_original:
+        from original_maps import build_original_maps
+        cases.update(build_original_maps())
     return cases
 
 

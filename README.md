@@ -12,6 +12,11 @@ Game xe tăng dùng Python/Pygame, gồm hai chế độ:
 Nền đen, thanh thông tin xám, font pixel và sprite gốc. Đạn nội suy mượt tới điểm
 va chạm, giữ nguyên thuật toán và luật 3 ô/vòng. [Xem ảnh và hoạt ảnh](CLASSIC_UI.md).
 
+## 35 map gốc đã chuyển đổi
+
+Chọn **AI BATTLE → MAP**, nhấn **O** để tới ORIGINAL_01; trái/phải chọn đến ORIGINAL_35.
+Map 13 × 13 dùng định dạng AI hiện tại. [Định dạng và quy tắc chuyển địa hình](levels_ai/README.md).
+
 ## Cài đặt và chạy
 
 Cần Python 3.10 trở lên. Giải nén mã nguồn, mở terminal trong thư mục chứa `tanks.py`:

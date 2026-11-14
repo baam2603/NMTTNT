@@ -1,7 +1,7 @@
 # NMTTNT — Tank Battle / Adversarial Search
 
-Bản mã nguồn gọn để nộp bài, dùng Python/Pygame. Minimax/Alpha-Beta dùng đánh giá
-cơ bản hoặc nâng cao; giữ quy tắc game, giao diện classic và hoạt ảnh đạn.
+Bản mã nguồn gọn để nộp bài, dùng Python/Pygame. So sánh Minimax/Alpha-Beta
+**không heuristic** với hai cấu hình **có heuristic**; giao diện classic, hoạt ảnh đạn.
 Mô hình zero-sum, giải thích thuật toán và kết quả: [REPORT.md](REPORT.md).
 
 ## Cài đặt và chạy
@@ -50,8 +50,8 @@ Cách đọc số liệu và chạy lại thí nghiệm: [experiments/README.md]
 
 ## Chế độ và điều khiển
 
-- **AI BATTLE:** hai AI; chọn MINIMAX (BASIC), ALPHA-BETA (BASIC), HEURISTIC
-  MINIMAX hoặc HEURISTIC ALPHA-BETA. Nhấn B ở setup chọn 60/120/250 ms hoặc FULL DEPTH.
+- **AI BATTLE:** hai AI; chọn MINIMAX (NO HEURISTIC), ALPHA-BETA (NO HEURISTIC),
+  HEURISTIC MINIMAX hoặc HEURISTIC ALPHA-BETA. Nhấn B ở setup chọn 60/120/250 ms hoặc FULL DEPTH.
 - **1 PLAYER:** bàn phím đấu 4 NPC. Phần này dùng bản chiếu hai xe cho mỗi NPC;
   không phải tìm kiếm đối kháng đầy đủ năm tác nhân. Các map gốc nhập dành riêng cho AI BATTLE.
 - Setup: lên/xuống chọn dòng, trái/phải đổi giá trị, Enter bắt đầu, Esc quay lại.
@@ -70,26 +70,27 @@ python task2/tournament.py --scenarios default open walls --depth 3 --max-cycles
 
 Các map kiểm tra gồm DEFAULT, OPEN, WALLS, DEFENSE và BULLET.
 ORIGINAL_01 … ORIGINAL_35 dùng địa hình chuyển từ map gốc.
-Giữ cùng điều kiện và đổi bên để so sánh. Hai bản BASIC dùng HP + khoảng cách
-Manhattan tới căn cứ địch; hai bản nâng cao thêm đường tới vị trí bắn có xét hướng,
-chi phí phá gạch, đường ngắm và dự báo đạn. BASIC cũng là heuristic theo định nghĩa;
-không gọi nó là “không heuristic”. Nhấn Tab để thấy evaluator, điểm/cận và độ sâu thực.
+Giữ cùng map, vị trí, độ sâu hoặc ngân sách thời gian và đổi bên để so sánh.
+Nhấn Tab để xem evaluator, điểm/cận, số nút và độ sâu thực đã hoàn tất.
 
-Bản terminal-only cũ vẫn dùng được làm đối chứng qua API, không đổi luật tìm kiếm:
+| Cấu hình | Trạng thái chưa kết thúc tại ngưỡng độ sâu | Cắt tỉa |
+| --- | --- | --- |
+| Minimax | 0, không heuristic | Không |
+| Alpha-Beta | 0, không heuristic | Có |
+| Heuristic Minimax | HP + đường tới vị trí bắn + ngắm + đạn | Không |
+| Heuristic Alpha-Beta | Cùng heuristic | Có |
 
-```python
-# Chạy tại thư mục task2/, hoặc thêm task2/ vào sys.path.
-from game import GameState
-from search import choose_action
-from heuristics import TerminalEvaluator
+Cả bốn dùng utility terminal: thắng +10000, thua -10000, hòa 0; ưu tiên thắng sớm,
+thua muộn bằng độ sâu còn lại. Hai bản không heuristic không dùng HP, khoảng cách,
+đường đi hay dự báo đạn để chấm trạng thái chưa kết thúc. `BasicEvaluator` đã được
+gỡ khỏi bản nộp này. Đây là tìm kiếm **hữu hạn theo độ sâu**, không phải vét cạn cả
+trận tới terminal. Điểm 0 ở ngưỡng cắt chỉ là trung tính, không khẳng định trạng thái
+đó thật sự hòa.
 
-action, info = choose_action(GameState.from_layout(), depth=4, mode="alphabeta",
-                             evaluator=TerminalEvaluator())
-```
-
-Bản đối chứng trả 0 ở trạng thái chưa kết thúc nên vẫn có thể chọn FIRE khi đồng
-điểm. BASIC còn hạn chế khi gặp đường vòng/thép; bản nâng cao tốn thêm chi phí đánh
-giá. Không cấu hình nào bảo đảm thắng hoặc luôn phải di chuyển mỗi lượt.
+Bản không heuristic có thể đứng bắn khi các hành động đều bằng 0; FIRE đứng trước
+trong thứ tự hành động cố định. Không ép xe di chuyển bằng kịch bản/ngẫu nhiên.
+Bản heuristic có tín hiệu dẫn đường sớm hơn, nhưng không bảo đảm thắng hoặc tối ưu
+cả trận. Luật game và hoạt ảnh giống nhau ở cả bốn cấu hình.
 
 ## Nguồn gốc
 

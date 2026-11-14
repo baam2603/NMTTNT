@@ -1,13 +1,24 @@
 {
-  "measured_at_utc": "2026-11-14T18:49:33.753760+00:00",
+  "measured_at_utc": "2026-11-14T19:07:33.518434+00:00",
   "python": "3.12.14",
   "system": "Linux",
   "machine": "x86_64",
-  "current_profile": "after_basic_firing_route_v1",
-  "before_revision": "3ef0963c9c8e9ac90f9504c74899264070348e60",
+  "current_profile": "terminal_vs_heuristic_v1",
+  "evaluators": {
+    "minimax": "terminal_only",
+    "alphabeta": "terminal_only",
+    "heuristic_minimax": "heuristic",
+    "heuristic_alphabeta": "heuristic"
+  },
+  "neutral_nonterminal_cutoff": 0,
+  "terminal_win_loss_draw": [
+    10000,
+    -10000,
+    0
+  ],
   "source_sha256": {
-    "task2/heuristics.py": "4ba2152de32301ccc98d13f9cc09459ff7605d236acdb5b30f77d92044df8f57",
-    "task2/search.py": "cad4d8202959d8aa4e89b8a8ae70b7d4a9718c452e6906dce1b9c148a31a6ef8",
+    "task2/heuristics.py": "361d3cd03d05aa7123ef60b2d824dcac8fb2158b0833f5d849076c2c54c19856",
+    "task2/search.py": "ad74c5a7c13f2227f9bb970fb53deaa0782efd7bd5ec26c4c53429e799f64fb6",
     "task2/game.py": "f7d23f9f6c0c5af4f3a77a072884d2091826abee53b5c94ba85f7d640b134037",
     "task2/external_greedy.py": "9e303e25a613920b5c72d4ca037c1d2aa49a785b0e46d4ab328d17bf7fe7156e"
   },
@@ -43,9 +54,10 @@
     "max_cycles": 60,
     "time_limit_ms": null,
     "matches": 60,
-    "swapped_seats": true
+    "swapped_seats": true,
+    "repeat_penalty": 0
   },
-  "behavior_before_after": {
+  "fixed_opponent_matches": {
     "scenario_names": [
       "default",
       "walls",
@@ -55,10 +67,10 @@
     "max_cycles": 60,
     "time_limit_ms": null,
     "opponent": "external_greedy.GreedyAgent",
-    "matches": 48,
+    "matches": 24,
     "swapped_seats": true,
     "repeat_penalty": 0
   },
   "overtime_definition": "external wall time > 1.1 * time_limit_ms; cooperative soft deadline",
-  "notes": "Measurements ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements. Current fixed-depth CSVs were remeasured, not reused from the terminal-only baseline."
+  "notes": "Measurements ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements. CSVs remeasured for terminal-only versus heuristic. Retired BASIC-version comparison remains in git history only."
 }

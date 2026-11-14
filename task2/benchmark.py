@@ -222,7 +222,7 @@ def main():
     print(f"Da luu: {args.output} ({len(rows)} lan chay)")
     print(f"Da luu: {args.summary} ({len(summary)} dong tong hop)")
     print("Luu y: Evals = so lan goi ham danh gia (leaves + order_evals).")
-    print("MM/AB use BASIC; H-MM/H-AB use ADVANCED; timed play reports depth_reached.")
+    print("MM/AB: no heuristic (terminal-only); H-MM/H-AB: heuristic; timed play reports depth_reached.")
 
 
 if __name__ == "__main__":

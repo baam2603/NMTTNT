@@ -26,7 +26,7 @@ class Evaluator(ABC):
 
 
 class TerminalEvaluator(Evaluator):
-    """Explicit terminal-only control, available through evaluator=... ."""
+    """No heuristic: terminal win/loss/draw utility; non-terminal cutoff is 0."""
     name = "terminal_only"
 
     def evaluate(self, state, me):
@@ -50,26 +50,6 @@ class SimpleEvaluator(TerminalEvaluator):
         if state.is_terminal():
             return super().evaluate(state, me)
         return bounded(self.material(state, me))
-
-
-class BasicEvaluator(SimpleEvaluator):
-    """Cheap baseline: material and Manhattan progress towards the enemy base.
-
-    This is itself a heuristic, not an exhaustive solution of the whole game.
-    It deliberately does not solve obstacle routing or forecast flying bullets.
-    """
-    name = "basic"
-
-    @staticmethod
-    def distance(state, player):
-        tank, target = state.tanks[player], state.bases[1 - player]
-        return abs(tank.r - target.r) + abs(tank.c - target.c)
-
-    def evaluate(self, state, me):
-        if state.is_terminal():
-            return TerminalEvaluator.evaluate(self, state, me)
-        return bounded(self.material(state, me) + self.w["path"] *
-                       (self.distance(state, 1 - me) - self.distance(state, me)))
 
 
 class HeuristicEvaluator(SimpleEvaluator):

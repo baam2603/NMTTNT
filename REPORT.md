@@ -18,28 +18,31 @@
 Minimax lấy MAX ở lượt của mình, MIN ở lượt đối thủ. Một depth là một hành động,
 không phải một vòng gồm hai lượt. Tìm kiếm sâu hữu hạn không bảo đảm tối ưu cả trận.
 
-## 2. Bốn cấu hình và hàm đánh giá đã cải thiện
+## 2. Bốn cấu hình: không heuristic và có heuristic
 
-| Cấu hình | Đánh giá trạng thái chưa kết thúc ở độ sâu giới hạn | Cắt tỉa |
+| Cấu hình | Đánh giá trạng thái chưa kết thúc tại ngưỡng độ sâu | Cắt tỉa |
 | --- | --- | --- |
-| Minimax (BASIC) | HP + khoảng cách Manhattan tới căn cứ địch | Không |
-| Alpha-Beta (BASIC) | Cùng đánh giá cơ bản | Có |
+| Minimax | 0, không dùng heuristic | Không |
+| Alpha-Beta | 0, cùng utility với Minimax | Có |
 | Heuristic Minimax | HP + đường tới vị trí bắn + hướng ngắm + đạn | Không |
-| Heuristic Alpha-Beta | Cùng đánh giá nâng cao | Có |
+| Heuristic Alpha-Beta | Cùng heuristic | Có |
 
-**BASIC cũng là heuristic theo định nghĩa.** Tên BASIC phân biệt đánh giá rẻ với
-đánh giá nâng cao, không đồng nghĩa “không heuristic”. `TerminalEvaluator` được giữ
-làm đối chứng đúng nghĩa: chỉ thắng/thua/hòa có utility, chưa kết thúc trả 0; truyền
-qua `choose_action(..., evaluator=TerminalEvaluator())` hoặc `SearchAgent`.
-Không thêm hành động di chuyển ngẫu nhiên hay ưu tiên giả để che việc đồng điểm.
+Hai cấu hình **không heuristic** mặc định dùng `TerminalEvaluator`: thắng/thua/hòa
+nhận +10000/−10000/0; trạng thái chưa kết thúc tại ngưỡng cắt nhận **0 trung tính**.
+Không dùng HP, Manhattan, đường đi, ngắm hay nguy cơ đạn để chấm các trạng thái đó.
+`BasicEvaluator` đã được gỡ để bản nộp chỉ còn phân biệt không/có heuristic.
 
-Gọi M là 100 × chênh lệch HP căn cứ + 80 × chênh lệch HP xe, theo góc nhìn MAX:
+Đây là baseline **giới hạn độ sâu**, không phải Minimax vét cạn tới terminal toàn
+bộ ván đấu. Điểm trung tính 0 không chứng minh trạng thái sẽ hòa. Khi chưa nhìn
+thấy thắng/thua trong cây, mọi nước có thể đồng điểm; thứ tự cố định có FIRE đầu
+nên tank có thể đứng bắn. Không dùng điều khiển ngẫu nhiên hoặc kịch bản di chuyển
+để che giới hạn này. Terminal ở trong cây vẫn được nhận biết và ưu tiên thắng
+sớm/thua muộn bằng phần thưởng độ sâu còn lại; cả bốn cấu hình áp dụng giống nhau.
 
-- **BASIC:** M + 10 × (khoảng cách Manhattan của địch tới căn cứ mình − của mình
-  tới căn cứ địch). Nhờ đó hành động tiến triển có thể tốt hơn đứng bắn khi HP bằng
-  nhau. Khoảng cách này không biết đi vòng thép và không dự báo đạn ngoài search.
-- **Nâng cao:** M + 10 × lợi thế chi phí tới vị trí bắn + 30 × lợi thế ngắm bắn
-  + 60 × lợi thế sát thương đạn dự báo. Không cộng thêm Manhattan của BASIC.
+Hai cấu hình **có heuristic** dùng `HeuristicEvaluator`. Với M = 100 × chênh lệch HP
+căn cứ + 80 × chênh lệch HP xe, tính theo góc nhìn MAX, điểm chưa kết thúc là:
+
+`H = M + 10 × lợi thế chi phí tới vị trí bắn + 30 × lợi thế ngắm + 60 × lợi thế đạn`.
 
 Dijkstra ngược chạy trên `(ô, hướng)`, bắt đầu từ các vị trí có thể bắn về căn cứ
 địch. Chi phí ước lượng gồm một lần FIRE, thời gian bay, HP gạch chắn; đi một ô tốn
@@ -54,8 +57,8 @@ trong cây tìm kiếm quyết định. Do đó chi phí này không phải số
 Dự báo đạn dùng engine va chạm trên **bản sao** tối đa 3 vòng, giả định xe giữ vị
 trí và không sinh thêm đạn. Xét gạch, đạn gặp/đổi ô, sát thương phe mình, HP thấp và
 chiết khấu theo thời gian; không coi đây là sát thương chắc chắn vì đối thủ có thể
-né/bắn chặn. Cả hai mức đánh giá giới hạn [-9900,9900], đổi góc nhìn thì đổi dấu,
-terminal thắng/thua/hòa vẫn ±10000/0. Phạt lặp mặc định bằng 0.
+né/bắn chặn. Điểm heuristic chưa kết thúc giới hạn [-9900,9900] để utility terminal trội hơn;
+đổi góc nhìn thì đổi dấu, terminal thắng/thua/hòa vẫn ±10000/0. Phạt lặp mặc định bằng 0.
 
 ## 3. Tối ưu và thống kê
 
@@ -92,69 +95,73 @@ File `task2/external_greedy.py` là ví dụ thử tích hợp. AI ngoài tự t
 
 ## 5. Kiểm chứng
 
-33 kiểm thử phát triển được chạy ngoài gói nộp gọn: 24 kiểm thử nền được cập nhật
-oracle theo evaluator BASIC mới và 9 kiểm thử hồi quy cho cải tiến. Bao gồm cây tính
-tay max(min(3,5),min(2,9))=3; vét cạn độc lập trên 40 map/hai bên; cận Alpha-Beta,
-PV, TT, deadline, khóa thời gian; va chạm/HP/hòa, nhập AI ngoài, chuyển 35 map và
-không sửa trạng thái đầu vào. Hồi quy mới kiểm tra tiến tới mục tiêu thay vì đồng
-điểm FIRE, chọn thắng ngay, tránh tự bắn căn cứ và né đạn chí mạng; hướng/gạch/thép
-trong chi phí tới vị trí bắn; dự báo đạn, cache và utility terminal trội hơn ước lượng.
+33 kiểm thử phát triển chạy ngoài gói nộp gọn: 24 kiểm thử nền và 9 kiểm thử hồi
+quy được cập nhật theo cấu hình không/có heuristic. Bao gồm cây tính tay
+max(min(3,5),min(2,9))=3; vét cạn độc lập trên 40 map/hai bên với đúng từng evaluator;
+cận Alpha-Beta, PV, TT, deadline, khóa thời gian; va chạm/HP/hòa, nhập AI ngoài,
+chuyển 35 map và không sửa trạng thái đầu vào.
 
-Kiểm tra Pygame xác nhận menu, một người/bốn NPC, trận hai AI, dừng/đi từng lượt,
-Tab phân tích và map gốc. 240 lượt benchmark cùng độ sâu cũng khớp giá trị ở mọi
-cặp Minimax/Alpha-Beta dùng cùng evaluator. Trên snapshot ORIGINAL_20 ban đầu,
-Alpha-Beta BASIC và nâng cao đều chọn MOVE_UP cho P0/MOVE_DOWN cho P1 ở depth 4.
-Điều này không bảo đảm mọi trạng thái khác đều phải di chuyển.
+Hồi quy xác nhận Minimax/Alpha-Beta mặc định dùng terminal-only: thay HP hoặc địa
+hình trong trạng thái chưa kết thúc vẫn cho điểm 0; hai bản còn lại dùng heuristic.
+Cả bốn nhận biết thắng ngay, tránh tự bắn căn cứ chí mạng và né đạn gây thua nếu
+cây đủ sâu nhìn thấy kết quả. Kiểm tra thêm hướng/gạch/thép trong đường tới vị trí
+bắn, dự báo va chạm đạn, cache, zero-sum và utility terminal trội hơn heuristic.
 
-## 6. Kết quả đo lại sau thay đổi
+Pygame đã kiểm tra menu, một người/bốn NPC, hai AI, dừng/đi từng lượt, Tab và map
+gốc. Bảng Tab ghi rõ NO HEURISTIC hoặc HEURISTIC; không đổi luật game/hoạt ảnh.
+240 lượt benchmark khớp giá trị ở mọi cặp Minimax/Alpha-Beta cùng evaluator.
+
+## 6. Kết quả đo lại cho cấu hình không/có heuristic
 
 Dữ liệu, môi trường và lệnh tái hiện: [experiments/README.md](experiments/README.md).
-Bốn CSV fixed-depth đã được **đo lại cho evaluator mới**, không dùng số liệu cũ để
-mô tả bản mới. Môi trường Python 3.12.14/Linux x86_64, chưa phải macOS Intel i5 của đề.
+Các CSV hiện tại được **đo lại** cho terminal-only và heuristic, không dùng kết quả
+của bản BASIC để mô tả bản này. Python 3.12.14/Linux x86_64, chưa phải máy macOS
+Intel i5 của đề; thời gian chỉ là tham khảo trên môi trường đo.
 
 ### Tìm kiếm cùng độ sâu
 
 `search_fixed_depth.csv`: 240 lượt = 5 map × 2 bên × depth 2/4 × 3 lần × 4 cấu hình.
-DEFAULT, OPEN, WALLS, DEFENSE và BULLET; mọi lượt đạt độ sâu yêu cầu. Cặp cùng
-evaluator khớp giá trị; CSV ghi tên evaluator và tổng hợp median/mean, nút, đánh giá,
-cắt tỉa. Đây là phép đo snapshot/cache mới, không phải các trận độc lập. Đánh giá
-nâng cao có thêm chi phí, không khẳng định nhanh hơn BASIC hoặc bản cũ.
+DEFAULT, OPEN, WALLS, DEFENSE và BULLET; mọi lượt đạt độ sâu yêu cầu. Cặp dùng cùng
+evaluator khớp giá trị. CSV có `evaluator=terminal_only/heuristic`, thời gian, số nút,
+lá, đánh giá, cắt tỉa, TT và độ sâu; file summary có median/mean. Lặp snapshot phục
+vụ đo thời gian, không tạo ra các trận độc lập. Heuristic tốn thêm chi phí đánh giá.
 
-### Đối đầu bốn cấu hình hiện tại, đổi bên
+### Đối đầu bốn cấu hình, đổi bên
 
-60 trận trên 5 map; depth 3, giới hạn 60 vòng, không deadline, phạt lặp 0; không
-agent fault. Mỗi cấu hình đấu nhiều đối thủ. Bảng dưới chỉ áp dụng bộ tình huống này.
+60 trận = 5 map × 6 cặp × 2 bên, depth 3, tối đa 60 vòng, không deadline/phạt lặp.
+Bảng được lấy từ `tournament_fixed_depth_summary.csv`:
 
 | Cấu hình | Trận | Thắng | Thua | Hòa | Mean ms/nước | Mean nút/nước |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| alphabeta | 30 | 7 | 23 | 0 | 1.025 | 61.95 |
-| heuristic_alphabeta | 30 | 19 | 3 | 8 | 2.877 | 56.86 |
-| heuristic_minimax | 30 | 19 | 3 | 8 | 7.128 | 230.30 |
-| minimax | 30 | 7 | 23 | 0 | 2.477 | 222.02 |
+| alphabeta | 30 | 3 | 19 | 8 | 0.994 | 55.22 |
+| heuristic_alphabeta | 30 | 19 | 3 | 8 | 3.933 | 59.06 |
+| heuristic_minimax | 30 | 19 | 3 | 8 | 9.428 | 231.63 |
+| minimax | 30 | 3 | 19 | 8 | 2.65 | 238.68 |
 
-Thời gian trong trận còn phụ thuộc trạng thái đã đi qua và cache được tái sử dụng;
-dùng benchmark snapshot để so chi phí tìm kiếm trên cùng trạng thái. Chưa xuất bản
-số liệu đối đầu cùng ngân sách thời gian; `--time-limit-ms` vẫn hỗ trợ phép đo này.
+Thời gian trong trận phụ thuộc trạng thái mỗi agent đi qua và cache giữa các lượt;
+dùng benchmark snapshot để so chi phí trên cùng trạng thái. Không có agent fault.
+Các tỷ lệ chỉ áp dụng các map, vị trí, depth và giới hạn đã ghi. Alpha-Beta cắt tỉa
+không làm utility tốt hơn Minimax cùng evaluator/độ sâu; lợi ích là giảm tìm kiếm.
+Chưa công bố số liệu cùng ngân sách thời gian; `--time-limit-ms` hỗ trợ giao thức đó.
 
-### Trước/sau với cùng một đối thủ cố định
+### Cùng một đối thủ tham chiếu
 
-`behavior_before_after.csv`: 48 trận = 2 phiên bản × 3 map (DEFAULT, WALLS,
-ORIGINAL_20) × 4 cấu hình × 2 bên. Cùng GreedyAgent, depth 3, tối đa 60 vòng,
-không deadline/phạt lặp; GreedyAgent và engine không thay đổi giữa hai phiên bản.
-Bản trước là commit `3ef0963`; bản sau là profile `after_basic_firing_route_v1`.
+`behavior_fixed_opponent.csv`: 24 trận = 3 map (DEFAULT, WALLS, ORIGINAL_20) ×
+4 cấu hình × 2 bên, cùng GreedyAgent, depth 3, tối đa 60 vòng, không deadline/phạt
+lặp. Cột movements chỉ đếm đổi ô, rotations là xoay tại chỗ, fires/stays là bắn/bỏ lượt.
 
-| Cấu hình | Trước: thắng/thua/hòa | Sau: thắng/thua/hòa | Số lần di chuyển trước → sau |
-| --- | --- | --- | ---: |
-| Minimax | 0/2/4 | 4/2/0 | 0 → 50 |
-| Alpha-Beta | 0/2/4 | 4/2/0 | 0 → 50 |
-| Heuristic Minimax | 5/1/0 | 5/1/0 | 57 → 47 |
-| Heuristic Alpha-Beta | 5/1/0 | 5/1/0 | 57 → 47 |
+| Cấu hình | Trận | Thắng | Thua | Hòa | Số lần đổi ô | Số lần bắn |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| alphabeta | 6 | 0 | 2 | 4 | 0 | 302 |
+| heuristic_alphabeta | 6 | 5 | 1 | 0 | 47 | 63 |
+| heuristic_minimax | 6 | 5 | 1 | 0 | 47 | 63 |
+| minimax | 6 | 0 | 2 | 4 | 0 | 302 |
 
-Số di chuyển cộng trên 6 trận mỗi hàng, chỉ đếm đổi ô, không đếm xoay. Trận hai bản
-có thể dài khác nhau; số di chuyển cao hơn không tự chứng minh chất lượng cao hơn.
-Kết quả cho thấy BASIC giải quyết được hiện tượng đứng bắn ở bộ thử; chưa chứng
-minh nâng cao tăng tỷ lệ thắng so bản nâng cao cũ. Các tình huống xác định và chỉ
-một đối thủ tham chiếu không đủ để suy ra tỷ lệ thắng tổng quát hay tối ưu cả trận.
+Tank terminal-only có thể không di chuyển khi chưa có nhánh thắng/thua phân biệt
+được trong độ sâu tìm kiếm. Đó là giới hạn của thông tin đánh giá ở baseline này;
+không kết luận sai Minimax chỉ từ hình ảnh đứng bắn. Kiểm chứng thuật toán dựa vào
+vét cạn độc lập/cây tính tay, không dựa riêng vào tỷ lệ thắng. Các trận xác định
+với một đối thủ tham chiếu không đủ để khẳng định hiệu quả trên mọi map.
 
 ## 7. Nguồn bản đồ
 

@@ -40,8 +40,8 @@ class Task2Backend(object):
         "heuristic_alphabeta": "H-ALPHABETA",
     }
     LONG = {
-        "minimax": "MINIMAX (BASIC)",
-        "alphabeta": "ALPHA-BETA (BASIC)",
+        "minimax": "MINIMAX (NO HEURISTIC)",
+        "alphabeta": "ALPHA-BETA (NO HEURISTIC)",
         "heuristic_minimax": "HEURISTIC MINIMAX",
         "heuristic_alphabeta": "HEURISTIC ALPHA-BETA",
     }
@@ -875,9 +875,8 @@ class AIBattle(object):
         if not info:
             self._text(self.f_text, "Waiting for the first AI decision...", c["muted"], (32, 110))
             return
-        label = {"heuristic": "ADVANCED: FIRING ROUTE + AIM + BULLETS",
-                 "basic": "BASIC: HP + MANHATTAN DISTANCE",
-                 "terminal_only": "CONTROL: TERMINAL UTILITY ONLY"}.get(
+        label = {"heuristic": "HEURISTIC: HP + ROUTE + AIM + BULLETS",
+                 "terminal_only": "NO HEURISTIC: TERMINAL UTILITY ONLY"}.get(
                      info.get("evaluator"), "EXTERNAL / CUSTOM EVALUATOR")
         self._text(self.f_small, label, c["green"], (32, 90))
         score = info.get("score")
@@ -903,7 +902,8 @@ class AIBattle(object):
         self._text(self.f_small, self._fit(self.f_small, line or "-", 410), c["text"], (32, 315))
         self._text(self.f_small, "= exact | <= upper bound | view: P%d" % mover,
                    c["muted"], (32, 338))
-        note = "Depth = actions. Evaluation is an estimate."
+        note = ("Non-terminal ties may choose FIRE." if info.get("evaluator") == "terminal_only"
+                else "Depth = actions. Heuristic is an estimate.")
         if m.is_over():
             note = "RESULT: " + m.result_text()[0] + "   TAB: RETURN TO BOARD"
         self._text(self.f_small, note, c["orange"] if m.is_over() else c["muted"], (32, 355))

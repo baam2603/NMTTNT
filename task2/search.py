@@ -1,13 +1,14 @@
 """Four adversarial-search configurations with observable, bounded-depth decisions.
 
-Baseline modes use a cheap material/distance evaluator; advanced modes add tactical
-and routing estimates. Equal values use stable action order, never scripted moves.
+Plain modes use terminal utility only and return neutral 0 at non-terminal cutoffs.
+Heuristic modes add material, routing and tactical estimates at those cutoffs.
+Equal values use stable action order, never scripted moves.
 """
 from abc import ABC, abstractmethod
 from math import isfinite
 from time import perf_counter
 
-from heuristics import BasicEvaluator, HeuristicEvaluator
+from heuristics import HeuristicEvaluator, TerminalEvaluator
 
 INF = float('inf')
 
@@ -37,7 +38,7 @@ class SearchTimeout(Exception):
 
 class SearchAlgorithm(ABC):
     def __init__(self, evaluator=None, name=None, repeat_aware=False):
-        self.evaluator = evaluator if evaluator is not None else BasicEvaluator()
+        self.evaluator = evaluator if evaluator is not None else TerminalEvaluator()
         self.name = name or type(self).__name__.lower()
         self.repeat_aware = repeat_aware
         self.stats = _new_stats()
@@ -259,8 +260,8 @@ class AlphaBeta(SearchAlgorithm):
 
 
 MODES = {
-    'minimax': (Minimax, BasicEvaluator, False),
-    'alphabeta': (AlphaBeta, BasicEvaluator, False),
+    'minimax': (Minimax, TerminalEvaluator, False),
+    'alphabeta': (AlphaBeta, TerminalEvaluator, False),
     'heuristic_minimax': (Minimax, HeuristicEvaluator, True),
     'heuristic_alphabeta': (AlphaBeta, HeuristicEvaluator, True),
 }

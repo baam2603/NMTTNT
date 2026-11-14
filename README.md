@@ -29,7 +29,6 @@ chạy được giao diện. Game tải `images/sprites.gif`, font và âm thanh
 | `presentation.py` | Hoạt ảnh đạn; không điều khiển quyết định của AI |
 | `task2/benchmark.py` | Đăng ký map và đo bốn cấu hình trên cùng trạng thái |
 | `task2/tournament.py` | Đối đầu đổi bên theo cùng độ sâu/cùng thời gian |
-| `task2/demo_maps.py` | Hai map minh họa heuristic |
 | `task2/original_maps.py` | Chuyển/đọc 35 map gốc |
 | `task2/external_greedy.py` | AI mẫu để thử nhập thuật toán ngoài qua F5 |
 | `arena.py` | Phần mở rộng một người đấu 4 NPC |
@@ -65,11 +64,11 @@ Cách đọc số liệu và chạy lại thí nghiệm: [experiments/README.md]
 ## Đo lại bốn cấu hình
 
 ```sh
-python task2/benchmark.py --scenarios h_detour h_dodge --players both --depths 2 4 --repeats 3 --output benchmark_results.csv --summary benchmark_summary.csv
-python task2/tournament.py --scenarios h_detour h_dodge --depth 3 --max-cycles 40 --output tournament_results.csv --summary tournament_summary.csv
+python task2/benchmark.py --scenarios default open walls --players both --depths 2 4 --repeats 3 --output benchmark_results.csv --summary benchmark_summary.csv
+python task2/tournament.py --scenarios default open walls --depth 3 --max-cycles 40 --output tournament_results.csv --summary tournament_summary.csv
 ```
 
-Hai map H_DETOUR/H_DODGE minh họa tìm đường vòng và né đạn.
+Các map kiểm tra gồm DEFAULT, OPEN, WALLS, DEFENSE và BULLET.
 ORIGINAL_01 … ORIGINAL_35 dùng địa hình chuyển từ map gốc.
 Giữ cùng điều kiện và đổi bên để so sánh; bản terminal-only có thể đứng bắn khi
 các phương án đồng điểm. Đây là giới hạn của baseline ở độ sâu thấp.

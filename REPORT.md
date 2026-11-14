@@ -45,7 +45,7 @@ chơi yếu. Không bổ sung điều khiển di chuyển giả vào hai baselin
 - Sắp xếp hành động gốc, ưu tiên nước tốt từ lần tìm sâu trước.
 - Có deadline: tìm sâu dần, trả kết quả hoàn tất cuối và luôn có nước hợp lệ dự phòng.
   Deadline kiểm tra trước các nút/evaluator, là ngân sách mềm, không cưỡng bức ngắt
-  một evaluator hay AI ngoài đang chạy. Báo cáo ghi cả lần vượt ngân sách.
+  một evaluator hay AI ngoài đang chạy. Chế độ đo có ngân sách ghi cả lần vượt.
 - SearchAgent tái sử dụng evaluator/cache Dijkstra giữa các lượt; TT được xóa mỗi lượt.
 - Thử hành động trên bản sao, không sửa trạng thái thật.
 - Đếm đủ `evals = order_evals + leaf_evals`. Tổng thời gian/nút tính cả vòng tìm kiếm
@@ -71,7 +71,7 @@ File `task2/external_greedy.py` là ví dụ thử tích hợp. AI ngoài tự t
 ## 5. Kiểm chứng trước đóng gói
 
 Bản mã nguồn sau dọn được chạy lại bộ kiểm thử phát triển đã lưu ngoài gói nộp:
-27 kiểm thử, gồm cây tính tay max(min(3,5),min(2,9))=3; vét cạn độc lập;
+24 kiểm thử, gồm cây tính tay max(min(3,5),min(2,9))=3; vét cạn độc lập;
 đối chiếu Minimax/Alpha-Beta; kiểm tra cận, PV, deadline, khóa thời gian, va chạm,
 HP và hòa; nhập AI ngoài; chuyển 35 map; nội suy và không sửa trạng thái đầu vào.
 Kiểm tra Pygame cũng xác nhận menu, chế độ một người/hai AI, dừng/đi từng lượt,
@@ -80,50 +80,40 @@ phân tích và chọn map gốc. File test phát triển không nằm trong b�
 ## 6. Kết quả tham khảo
 
 Dữ liệu, môi trường và lệnh tái hiện: [experiments/README.md](experiments/README.md).
-Đã lọc map được gỡ khỏi số liệu và tổng hợp lại; giữ nguyên giá trị đo còn lại.
+Đã bỏ số liệu của các map được gỡ và tổng hợp lại; giữ nguyên giá trị đo còn lại.
+Môi trường tham khảo là Python 3.12.14/Linux x86_64, chưa phải máy macOS Intel i5 của đề.
 
 ### Tìm kiếm cùng độ sâu
 
-`search_fixed_depth.csv`: 336 lượt = 7 map × 2 bên × depth 2/4 × 3 lần đo × 4 cấu hình.
-Mọi lượt hoàn thành depth yêu cầu; các cặp cùng evaluator khớp giá trị. File
-`search_fixed_depth_summary.csv` lưu median/mean thời gian, nút, evals và cắt tỉa.
-Lặp lại cùng trạng thái dùng đo thời gian, không phải các trận đấu độc lập.
+`search_fixed_depth.csv`: 240 lượt = 5 map × 2 bên × depth 2/4 × 3 lần đo × 4 cấu hình.
+Các map là DEFAULT, OPEN, WALLS, DEFENSE và BULLET. Mọi lượt hoàn thành độ sâu yêu
+cầu; cặp cùng evaluator khớp giá trị. `search_fixed_depth_summary.csv` chứa thời
+gian median/mean, số nút, đánh giá và cắt tỉa. Lặp cùng trạng thái phục vụ đo thời
+gian, không phải các trận độc lập.
 
-### Đấu cùng độ sâu, đổi bên
+### Đối đầu cùng độ sâu, đổi bên
 
-84 trận trên 7 map: depth 3, giới hạn 60 vòng, không deadline, phạt lặp = 0.
-Mọi trận còn lại có faults = 0. Các cấu hình chơi với nhiều đối thủ.
+60 trận trên 5 map; depth 3, giới hạn 60 vòng, không deadline, phạt lặp = 0.
+Các cấu hình chơi với nhiều đối thủ. Không có agent fault trong các bản ghi còn lại.
 
 | Cấu hình | Trận | Thắng | Thua | Hòa | Mean ms/nước | Mean nút/nước |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| alphabeta | 42 | 1 | 23 | 18 | 0.99 | 50.09 |
-| heuristic_alphabeta | 42 | 23 | 1 | 18 | 2.107 | 62.23 |
-| heuristic_minimax | 42 | 23 | 1 | 18 | 5.256 | 222.38 |
-| minimax | 42 | 1 | 23 | 18 | 2.484 | 208.02 |
+| alphabeta | 30 | 1 | 15 | 14 | 1.078 | 51.09 |
+| heuristic_alphabeta | 30 | 15 | 1 | 14 | 2.4 | 63.11 |
+| heuristic_minimax | 30 | 15 | 1 | 14 | 5.764 | 221.63 |
+| minimax | 30 | 1 | 15 | 14 | 2.668 | 212.09 |
 
-Chỉ số trung bình trong trận phụ thuộc các trạng thái mỗi bên đi qua; dùng
+Thời gian trung bình trong trận còn phụ thuộc trạng thái mỗi agent đi qua; dùng
 benchmark snapshot để đối chiếu chi phí tìm kiếm trên cùng trạng thái.
-
-### Đấu cùng ngân sách thời gian
-
-12 trận trên H_DODGE, đổi bên: 30 ms/nước, depth tối đa 6, giới hạn 20 vòng.
-Overtime đếm thời gian gọi agent vượt 33 ms, gồm cả chi phí gọi hàm.
-
-| Cấu hình | Thắng | Thua | Hòa | Mean depth | Mean ms/nước | Overtime |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| alphabeta | 0 | 1 | 5 | 5.88 | 17.677 | 1 |
-| heuristic_alphabeta | 3 | 0 | 3 | 5.14 | 27.04 | 2 |
-| heuristic_minimax | 1 | 0 | 5 | 3.49 | 28.355 | 0 |
-| minimax | 0 | 3 | 3 | 4.19 | 28.495 | 1 |
+Các dữ liệu đối đầu cùng ngân sách thời gian trước đây chỉ thuộc map đã gỡ nên
+không còn được đưa vào gói nộp. Chương trình vẫn hỗ trợ giao thức này qua
+`--time-limit-ms`; không trình bày số liệu chưa đo cho các map đang dùng.
 
 
-## 7. Map minh họa và nguồn bản đồ
+## 7. Nguồn bản đồ
 
-- H_DETOUR: hai hàng thép so le; ở depth 4, P0 plain chọn FIRE, heuristic chọn LEFT
-  để giảm chi phí đường đi. Ca kiểm thử phát triển với P1 bỏ lượt cố định cho thấy
-  sáu lượt heuristic đưa P0 qua lối mở.
-- H_DODGE: P0 hướng trái, có đạn đi xuống gần xe. Ở depth 4, plain FIRE mất 1 HP,
-  heuristic LEFT giữ đủ HP. Minh họa toàn bộ evaluator, không riêng trọng số đạn.
+- DEFAULT, OPEN, WALLS, DEFENSE, BULLET: các tình huống cơ sở để kiểm tra tìm kiếm,
+  vật cản, phòng thủ và đạn.
 - ORIGINAL_01 … ORIGINAL_35: 26×26 nguồn gộp thành 13×13; nước thành thép, cỏ/băng
   thành trống, ưu tiên ô cản khi nhóm hỗn hợp. Thêm căn cứ trên cho trận hai bên.
   [Quy tắc và định dạng](levels_ai/README.md).

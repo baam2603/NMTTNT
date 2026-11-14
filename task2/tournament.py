@@ -66,7 +66,7 @@ class Tournament:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenarios', nargs='+', choices=list(build_scenarios()),
-                        default=['h_detour','h_dodge'])
+                        default=['default','open','walls'])
     parser.add_argument('--modes', nargs='+', choices=list(MODES), default=list(MODES))
     parser.add_argument('--depth', type=int, default=3)
     parser.add_argument('--max-cycles', type=int, default=40)

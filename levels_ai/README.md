@@ -62,7 +62,7 @@ ORIGINAL_34, P0 cần phá gạch trước khi di chuyển; ba lần bắn lên 
 Giữ cùng điều kiện và đổi thuật toán giữa P0/P1 khi so sánh.
 
 Các map nhập này hiện phục vụ **hai AI đấu nhau**. Chế độ một người/4 NPC giữ
-7 map trước đó: một số map gốc không đủ chỗ trống để đặt cả bốn NPC gần điểm sinh,
+5 map còn lại: một số map gốc không đủ chỗ trống để đặt cả bốn NPC gần điểm sinh,
 nên không tự xóa tường hoặc đổi luật để ép thêm xe.
 
 ## Chỉnh sửa và chuyển lại
@@ -93,6 +93,6 @@ Benchmark dùng đúng thuật toán hiện tại:
 python task2/benchmark.py --scenarios original_01 original_19 original_35 --players both --depths 2 4 --repeats 3 --output original_results.csv --summary original_summary.csv
 ```
 
-`--scenarios all` nay gồm 42 map (7 map cũ + 35 map gốc). Dữ liệu tham khảo cũ
-trong experiments/ vẫn chỉ thuộc 7 map đã ghi trong báo cáo; không tự coi đó là
+`--scenarios all` nay gồm 40 map (5 map kiểm tra + 35 map gốc). Dữ liệu tham khảo cũ
+trong experiments/ vẫn chỉ thuộc 5 map đã ghi trong báo cáo; không tự coi đó là
 số liệu của các map mới.

@@ -1,6 +1,7 @@
 
 import os
 import importlib.util
+import inspect
 import sys
 import threading
 from pathlib import Path
@@ -91,7 +92,7 @@ class Task2Backend(object):
                     src = path.read_text(encoding="utf-8", errors="ignore")
                 except OSError:
                     continue
-                if "create_agent" not in src and "def choose_action" not in src:
+                if "create_agent" not in src and "def choose_action" not in src and "def act(" not in src:
                     continue
                 options.append({"kind": "file", "path": str(path),
                                 "label": "FILE: " + path.name,
@@ -111,8 +112,11 @@ class Task2Backend(object):
             "battle_external_" + path.stem, path
         )
         module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
         spec.loader.exec_module(module)
         obj = module.create_agent(player_id) if hasattr(module, "create_agent") else module
+        if hasattr(obj, "reset"):
+            obj.reset(player_id)
         return ExternalAgentAdapter(obj)
 
 
@@ -121,18 +125,22 @@ class ExternalAgentAdapter:
         self.obj = obj
 
     def act(self, state, time_limit_ms=None, history=None):
-        if hasattr(self.obj, "choose_action"):
-            out = self.obj.choose_action(state)
-            return out if isinstance(out, tuple) else (out, getattr(self.obj, "last_info", {}))
-        return self.obj.act(state)
+        fn = self.obj.choose_action if hasattr(self.obj, "choose_action") else self.obj.act
+        params = inspect.signature(fn).parameters
+        arbitrary = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+        kwargs = {k: v for k, v in {"time_limit_ms": time_limit_ms, "history": history}.items()
+                  if arbitrary or k in params}
+        out = fn(state, **kwargs)
+        return out if isinstance(out, tuple) else (out, getattr(self.obj, "last_info", {}))
 
 
 # --------------------------------------------------------------------------- #
 #  Match: dieu khien mot van dau (khong phu thuoc pygame)
 # --------------------------------------------------------------------------- #
 class Match(object):
-    def __init__(self, backend, state, agents, options, depths):
+    def __init__(self, backend, state, agents, options, depths, time_limit_ms=60):
         self.backend = backend
+        self.time_limit_ms = time_limit_ms
         self.state = state
         self.prev_state = None
         self.agents = agents            # [agent | None (human), agent | None]
@@ -159,13 +167,13 @@ class Match(object):
         return not self.is_over() and self.is_human(self.state.to_move)
 
     def is_over(self):
-        return self.state.is_terminal() or self.state.cycle >= MAX_CYCLES
+        return self.state.is_terminal()
 
     def result_text(self):
         """(tieu de, ly do) cua van dau da ket thuc."""
         s = self.state
-        if not s.is_terminal():
-            return "DRAW", "Turn limit reached (%d cycles)" % MAX_CYCLES
+        if s.termination_reason() == "cycle_limit":
+            return "DRAW", "Turn limit reached (%d cycles)" % s.max_cycles
         winner = s.winner()
         if winner is None:
             return "DRAW", "Both sides lost at the same time"
@@ -196,8 +204,8 @@ class Match(object):
         self.mover = mover
         self.last_action = action
         self.events = self._diff(prev, new)
-        data = {"action": action.name}
-        data.update({k: info[k] for k in ("time_ms", "nodes", "depth_reached", "cutoffs") if k in info})
+        data = dict(info)
+        data["action"] = action.name
         self.last[mover] = data
 
     @staticmethod
@@ -240,7 +248,7 @@ class Match(object):
 
         def work():
             try:
-                out = agent.act(state, time_limit_ms=60, history=history)
+                out = agent.act(state, time_limit_ms=self.time_limit_ms, history=history)
                 action, info = out if isinstance(out, tuple) else (out, {})
                 result = (token, action, dict(info), None)
             except Exception as exc:  # noqa: BLE001 - hien loi len giao dien
@@ -266,7 +274,7 @@ class Match(object):
             self.error = "P%d: agent returned no action" % self.state.to_move
             return False
         try:
-            self._apply(action, info)
+            self._apply(self.backend.agent._to_action(action), info)
         except Exception as exc2:  # noqa: BLE001
             self.error = "P%d: %s" % (self.state.to_move, exc2)
             return False
@@ -316,6 +324,11 @@ class AIBattle(object):
         self.paused = False
         self.step_once = False
         self.speed = 2
+        self.budgets = [60, 120, 250, None]
+        self.budget_index = 0
+        self.inspect_search = False
+        self.show_vectors = True
+        self._step_inflight = False
         self.last_move_ms = 0
         self.flashes = []
 
@@ -504,6 +517,8 @@ class AIBattle(object):
                     self._change_row(rows[self.row], 1 if event.key == pg.K_RIGHT else -1)
                 elif event.key == pg.K_F5:
                     self._refresh_options_keep_selection()
+                elif event.key == pg.K_b:
+                    self.budget_index = (self.budget_index + 1) % len(self.budgets)
                 elif event.key == pg.K_RETURN:
                     if self._start_match():
                         return True
@@ -589,8 +604,9 @@ class AIBattle(object):
             self._text(self.f_small, msg, c["red"], (240, 358), center=True)
         self._text(self.f_small, "UP/DOWN SELECT   LEFT/RIGHT CHANGE   ENTER START   ESC BACK",
                    c["muted"], (240, 374), center=True)
-        self._text(self.f_small, ("ARROWS MOVE   SPACE FIRE   X STAY" if self.human_mode else
-                                  "F5 RESCAN  -  PUT EXTERNAL AI (.py) IN task2/ OR agents/"),
+        budget = self.budgets[self.budget_index]
+        budget_label = "FULL DEPTH" if budget is None else "%d ms / MOVE" % budget
+        self._text(self.f_small, "B BUDGET: " + budget_label + "   F5 IMPORT AI   TAB ANALYSIS IN MATCH",
                    c["muted"], (240, 390), center=True)
         pg.display.flip()
 
@@ -612,9 +628,10 @@ class AIBattle(object):
             self.setup_msg = "Cannot start: %s" % exc
             return False
         self.setup_msg = ""
-        self.match = Match(self.backend, state, agents, options, depths)
+        self.match = Match(self.backend, state, agents, options, depths, self.budgets[self.budget_index])
         self.paused = False
         self.step_once = False
+        self._step_inflight = False
         self.flashes = []
         self.last_move_ms = self.pg.time.get_ticks()
         return True
@@ -644,6 +661,10 @@ class AIBattle(object):
                 elif event.key == pg.K_n:
                     self.paused = True
                     self.step_once = True
+                elif event.key == pg.K_TAB:
+                    self.inspect_search = not self.inspect_search
+                elif event.key == pg.K_v:
+                    self.show_vectors = not self.show_vectors
                 elif event.key in (pg.K_EQUALS, pg.K_PLUS, pg.K_KP_PLUS, pg.K_RIGHTBRACKET):
                     self.speed = min(len(self.SPEEDS) - 1, self.speed + 1)
                 elif event.key in (pg.K_MINUS, pg.K_KP_MINUS, pg.K_LEFTBRACKET):
@@ -664,12 +685,15 @@ class AIBattle(object):
 
             m = self.match
             # AI tra loi
-            if m.poll():
+            if (not self.paused or self.step_once or self._step_inflight) and m.poll():
                 self._after_move(now)
+                self.step_once = False
+                self._step_inflight = False
             # yeu cau nuoc di ke tiep
             if not m.is_over() and not m.error and not m.thinking and not m.current_is_human():
                 delay = self.SPEEDS[self.speed]
                 if (not self.paused and now - self.last_move_ms >= delay) or self.step_once:
+                    self._step_inflight = self.step_once
                     self.step_once = False
                     m.request_ai_move()
             self._draw_play(now)
@@ -738,7 +762,7 @@ class AIBattle(object):
         # --- thanh tren ---
         pg.draw.rect(scr, c["panel"], (0, 0, 480, 32))
         self._text(self.f_small, self.title, c["orange"], (10, 10))
-        self._text(self.f_small, "CYCLE %d / %d" % (s.cycle, MAX_CYCLES), c["text"], (176, 10), center=False)
+        self._text(self.f_small, "CYCLE %d / %s" % (s.cycle, s.max_cycles if s.max_cycles is not None else "INF"), c["text"], (176, 10), center=False)
         self._text(self.f_small, "MAP " + self.backend.maps[self.sel_map].upper(), c["muted"], (470, 10), right=True)
 
         # --- nen ban co ---
@@ -784,6 +808,9 @@ class AIBattle(object):
             if self.human_mode and i > 0:
                 self._text(self.f_small, str(i), c["text"], (x + 2, y + cell - 13))
 
+        if self.show_vectors:
+            self._draw_vectors(origin)
+
         # --- dan ---
         for (r, cc, d) in self._bullet_positions(now):
             img = self.img_bullet[d]
@@ -819,6 +846,8 @@ class AIBattle(object):
 
         self._draw_panel()
         self._draw_footer()
+        if self.inspect_search and not self.human_mode:
+            self._draw_search_details()
         pg.display.flip()
 
     def _draw_panel(self):
@@ -836,7 +865,9 @@ class AIBattle(object):
             pg.draw.rect(scr, c["panel2"] if turn else c["panel"], (x0, y0, w, 152), border_radius=5)
             pg.draw.rect(scr, self.colors[p], (x0, y0, 3, 152), border_radius=2)
             self._text(self.f_small, "P%d" % p, self.colors[p], (x0 + 9, y0 + 5))
-            name = "4 NPCs" if self.human_mode and p == 1 else m.options[p]["short"]
+            short = {"minimax": "MM", "alphabeta": "AB", "heuristic_minimax": "H-MM",
+                     "heuristic_alphabeta": "H-AB"}
+            name = "4 NPCs" if self.human_mode and p == 1 else short.get(m.options[p].get("mode"), m.options[p]["short"])
             if m.options[p]["kind"] == "search" and not self.human_mode:
                 name += " D%d" % m.depths[p]
             self._text(self.f_small, self._fit(self.f_small, name, w - 36), c["text"], (x0 + 30, y0 + 5))
@@ -856,12 +887,14 @@ class AIBattle(object):
             if "nodes" in info:
                 lines.append(("NODES", str(info["nodes"])))
             if "depth_reached" in info:
-                lines.append(("DEPTH", str(info["depth_reached"])))
+                lines.append(("DEPTH", "%s/%s" % (info["depth_reached"], info.get("depth", m.depths[p]))))
+            if "evals" in info:
+                lines.append(("EVALS", str(info["evals"])))
             if self.human_mode and p == 1:
                 lines = [(str(i) + " " + m.options[i]["short"],
                           str(s.tanks[i].hp) + "/" + str(game.TANK_HP)) for i in range(1, 5)]
             for i, (k, v) in enumerate(lines):
-                yy = y0 + 78 + i * 15
+                yy = y0 + 76 + i * 12
                 self._text(self.f_small, self._fit(self.f_small, k, w - 42), c["muted"], (x0 + 9, yy))
                 self._text(self.f_small, self._fit(self.f_small, v, w - 62), c["text"], (x0 + w - 6, yy), right=True)
             if turn:
@@ -869,6 +902,80 @@ class AIBattle(object):
                 if self.human_mode and p == 1:
                     label = "NPC %d %s" % (s.to_move, "THINKING" if m.thinking else "READY")
                 self._text(self.f_small, label, c["orange"], (x0 + 9, y0 + 138))
+
+    def _draw_vectors(self, origin):
+        """Current facing rays and previous movement; these are not future actions."""
+        pg, s, cell = self.pg, self.match.state, self.cell
+        for p, tank in enumerate(s.tanks):
+            if tank.hp <= 0:
+                continue
+            dr, dc = self.backend.game.HUONG[tank.d]
+            r, col = tank.r, tank.c
+            while True:
+                nr, nc = r + dr, col + dc
+                if not s.in_bounds(nr, nc):
+                    break
+                r, col = nr, nc
+                if s.entity_at(r, col) is not None:
+                    break
+            start = (origin[0] + (tank.c + .5) * cell, origin[1] + (tank.r + .5) * cell)
+            end = (origin[0] + (col + .5) * cell, origin[1] + (r + .5) * cell)
+            steps = max(1, int(max(abs(end[0]-start[0]), abs(end[1]-start[1])) / 7))
+            for i in range(0, steps, 2):
+                a, b = i / steps, min(i+1, steps) / steps
+                pg.draw.line(self.screen, self.colors[p],
+                             (start[0]+a*(end[0]-start[0]), start[1]+a*(end[1]-start[1])),
+                             (start[0]+b*(end[0]-start[0]), start[1]+b*(end[1]-start[1])), 1)
+        m = self.match
+        if m.prev_state is not None and m.mover is not None:
+            old, new = m.prev_state.tanks[m.mover], s.tanks[m.mover]
+            if (old.r, old.c) != (new.r, new.c):
+                a = (origin[0]+(old.c+.5)*cell, origin[1]+(old.r+.5)*cell)
+                b = (origin[0]+(new.c+.5)*cell, origin[1]+(new.r+.5)*cell)
+                pg.draw.line(self.screen, self.colors[m.mover], a, b, 3)
+                pg.draw.circle(self.screen, self.colors[m.mover], b, 4)
+
+    def _draw_search_details(self):
+        pg, c, m = self.pg, self.c, self.match
+        mover = m.mover if m.mover is not None else m.state.to_move
+        info = m.last[mover]
+        pg.draw.rect(self.screen, c["panel"], (18, 35, 444, 344), border_radius=8)
+        pg.draw.rect(self.screen, self.colors[mover], (18, 35, 444, 344), 2, border_radius=8)
+        self._text(self.f_text, "SEARCH: P%d MAX / P%d MIN" % (mover, 1-mover), c["text"], (32, 46))
+        self._text(self.f_small, "TAB CLOSE    P PAUSE    N NEXT ACTION", c["orange"], (32, 68))
+        if not info:
+            self._text(self.f_text, "Waiting for the first AI decision...", c["muted"], (32, 110))
+            return
+        label = ("HP + PATH + AIM + BULLETS" if "heuristic" in info.get("mode", "") else
+                 "TERMINAL UTILITY ONLY" if info.get("mode") else "EXTERNAL AGENT: OPTIONAL DIAGNOSTICS")
+        self._text(self.f_small, label, c["green"], (32, 90))
+        score = info.get("score")
+        value = "?" if score is None else "%+.1f" % score
+        status = "FALLBACK" if info.get("fallback") else "COMPLETED"
+        self._text(self.f_small, "VALUE %s   DEPTH %s/%s   %s" %
+                   (value, info.get("depth_reached", "?"), info.get("depth", "?"), status), c["text"], (32, 108))
+        self._text(self.f_small, "NODES %s  CUT %s  TT %s  EVALS %s" %
+                   tuple(info.get(k, 0) for k in ("nodes", "cutoffs", "tt_hits", "evals")), c["muted"], (32, 126))
+        self._text(self.f_small, "ACTION            VALUE/BOUND       NODES", c["orange"], (32, 151))
+        for i, row in enumerate(info.get("root_actions", [])):
+            y = 171 + i * 19
+            selected = row["action"] == info["action"]
+            value = ("<= " if row["bound"] == "upper" else "= ") + "%+.1f" % row["score"]
+            self._text(self.f_small, ("> " if selected else "  ") + row["action"],
+                       c["green"] if selected else c["text"], (32, y))
+            self._text(self.f_small, value, c["text"], (206, y))
+            self._text(self.f_small, str(row["nodes"]), c["muted"], (410, y), right=True)
+        if not info.get("root_actions"):
+            self._text(self.f_small, "No complete search iteration within the time budget.", c["muted"], (32, 178))
+        line = " > ".join("P%d:%s" % (x["player"], x["action"].replace("MOVE_", "")) for x in info.get("pv", []))
+        self._text(self.f_small, "PREDICTED LINE (each side may replan):", c["orange"], (32, 296))
+        self._text(self.f_small, self._fit(self.f_small, line or "-", 410), c["text"], (32, 315))
+        self._text(self.f_small, "= exact   <= upper bound from pruning; values are for P%d" % mover,
+                   c["muted"], (32, 338))
+        note = "Depth counts actions. Plain equal scores can select FIRE."
+        if m.is_over():
+            note = "RESULT: " + m.result_text()[0] + "   TAB: RETURN TO BOARD"
+        self._text(self.f_small, note, c["orange"] if m.is_over() else c["muted"], (32, 355))
 
     def _draw_footer(self):
         pg = self.pg
@@ -883,11 +990,11 @@ class AIBattle(object):
         elif self.paused:
             status, col = "PAUSED  (P resume, N step)", c["orange"]
         else:
-            status, col = "RUNNING", c["green"]
+            status, col = "P%d TURN -> BULLETS AFTER ROUND" % m.state.to_move, c["green"]
         status = "%s    SPEED %d/%d" % (status, self.speed + 1, len(self.SPEEDS))
         self._text(self.f_small, self._fit(self.f_small, status, 464), col, (8, 388))
         if m.current_is_human():
             hint = "ARROWS MOVE   SPACE FIRE   X STAY"
         else:
-            hint = "P PAUSE   N STEP   +/- SPEED   R RESTART   ESC SETUP"
+            hint = "P PAUSE  N STEP  TAB ANALYSIS  V AIM  +/- SPEED  ESC SETUP"
         self._text(self.f_small, hint, c["muted"], (8, 401))

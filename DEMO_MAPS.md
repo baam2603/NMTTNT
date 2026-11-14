@@ -9,7 +9,8 @@ Giảm tốc bằng phím `-` hoặc dùng P/N để xem từng lượt.
 Map cũng xuất hiện ở chế độ 1 người, nhưng nên dùng AI BATTLE để đối chiếu hai evaluator.
 
 Đối chiếu **nước đầu của P0 từ cùng trạng thái**; giữ cố định P1, độ sâu và tốc độ.
-Giao diện có ngân sách 60 ms nên hãy kiểm tra DEPTH thực tế đạt được; nếu máy chậm,
+Giao diện mặc định ngân sách 60 ms (B ở setup để đổi hoặc chọn FULL DEPTH).
+Hãy kiểm tra DEPTH thực tế đạt được; nếu máy chậm,
 giảm cả hai bên xuống độ sâu 2. Lệnh bên dưới không giới hạn thời gian và tìm đủ độ sâu.
 
 ## H_DETOUR — tìm đường vòng qua tường thép

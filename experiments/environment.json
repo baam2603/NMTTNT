@@ -1,0 +1,38 @@
+{
+  "python": "3.12.14",
+  "system": "Linux",
+  "machine": "x86_64",
+  "fixed_depth_search": {
+    "scenarios": 8,
+    "players": [
+      0,
+      1
+    ],
+    "depths": [
+      2,
+      4
+    ],
+    "repeats": 3,
+    "time_limit_ms": null
+  },
+  "fixed_depth_matches": {
+    "scenarios": 8,
+    "depth": 3,
+    "max_cycles": 60,
+    "matches": 96,
+    "swapped_seats": true
+  },
+  "equal_time_matches": {
+    "scenarios": [
+      "h_dodge",
+      "asymmetric"
+    ],
+    "depth_cap": 6,
+    "time_limit_ms": 30,
+    "max_cycles": 20,
+    "matches": 24,
+    "swapped_seats": true
+  },
+  "overtime_definition": "external wall time > 1.1 * time_limit_ms; cooperative soft deadline",
+  "notes": "Experiments ran sequentially. Host timings are samples, not macOS Intel i5 grading measurements."
+}

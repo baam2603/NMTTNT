@@ -99,8 +99,10 @@ def measure_one(state, scenario, player, depth, mode, repeat):
         "leaves": info["leaves"],
         "cutoffs": info["cutoffs"],
         "pruned_actions": info["pruned_actions"],
-        "order_evals": 0,
-        "total_evals": info["leaves"],
+        "order_evals": info["order_evals"],
+        "total_evals": info["evals"],
+        "depth_reached": info["depth_reached"],
+        "tt_hits": info["tt_hits"],
         "nodes_per_second": round(nodes / (elapsed / 1000), 1) if elapsed > 0 else 0,
     }
 
@@ -219,7 +221,7 @@ def main():
     print(f"Da luu: {args.output} ({len(rows)} lan chay)")
     print(f"Da luu: {args.summary} ({len(summary)} dong tong hop)")
     print("Luu y: Evals = so lan goi ham danh gia (leaves + order_evals).")
-    print("simple_eval la baseline dua vao HP, khong phai terminal-only Minimax.")
+    print("Plain modes use terminal-only utility; timed play uses actual depth_reached.")
 
 
 if __name__ == "__main__":

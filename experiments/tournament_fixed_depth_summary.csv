@@ -1,0 +1,5 @@
+﻿mode,games,wins,losses,draws,faults,overtime,mean_move_ms,mean_nodes,mean_evals,mean_depth
+alphabeta,48,1,27,20,0,0,0.988,50.84,40.57,3.0
+heuristic_alphabeta,48,28,2,18,0,0,2.106,62.41,50.36,3.0
+heuristic_minimax,48,28,2,18,0,0,5.228,222.29,189.81,3.0
+minimax,48,1,27,20,0,0,2.474,211.45,180.83,3.0

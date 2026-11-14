@@ -2,7 +2,7 @@ import heapq
 from abc import ABC, abstractmethod
 from math import ceil
 
-from game import HUONG, EntityKind
+from game import HUONG, EntityKind, TOC_DO_DAN
 
 
 WIN = 10_000
@@ -221,7 +221,7 @@ class HeuristicEvaluator(SimpleEvaluator):
             if self._head_on(state, bullet, distance):
                 continue
             kind, victim = entity
-            cycles = max(1, ceil(distance / 3))
+            cycles = max(1, ceil(distance / TOC_DO_DAN))
             target_value = (
                 1.5 if kind == EntityKind.BASE else 1.0
             )
@@ -273,4 +273,5 @@ class HeuristicEvaluator(SimpleEvaluator):
             self.incoming(state, me)
             - self.incoming(state, enemy)
         )
-        return score
+        # Terminal wins/losses must dominate every non-terminal estimate.
+        return max(-WIN + 100, min(WIN - 100, score))

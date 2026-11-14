@@ -16,11 +16,14 @@ python -m pip install -r requirements.txt
 python tanks.py
 ```
 
-Mũi tên: di chuyển/xoay; Space: bắn; X: bỏ lượt.
+Trong AI BATTLE: **B** đổi ngân sách ở setup; **Tab** xem phân tích tìm kiếm,
+**V** xem hướng súng, **P** dừng, **N** đi một hành động.
+Mũi tên: di chuyển/xoay; Space: bắn; X: bỏ lượt ở chế độ người chơi.
 Trận đấu vận hành theo lượt. P tạm dừng, R chơi lại, Esc quay lại thiết lập.
 
 Chi tiết luật trận, lớp kết nối và cách kiểm tra: [AI_BATTLE_README.md](AI_BATTLE_README.md).
-Bốn file lõi trong `task2/` được giữ nguyên từ bản ZIP đầu vào.
+Giữ bốn cấu hình đúng bản chất; đã đồng bộ luật hòa, tối ưu tìm kiếm và bổ sung thống kê.
+Xem [mô hình đối kháng, bảng phân tích UI và kiểm chứng](ADVERSARIAL_SEARCH.md).
 Ở trận 1 chọi 4, mỗi NPC dùng bản chiếu trạng thái hai xe để giữ nguyên thuật toán gốc;
 các NPC khác được xem là vật cản khi lập kế hoạch. Đây không phải tìm kiếm đầy đủ năm tác nhân.
 
@@ -41,7 +44,9 @@ và xe P1 trên phải, khác cả hàng lẫn cột. Xem [sơ đồ và vị tr
 ## Kiểm tra
 
 ```sh
+python -m unittest discover -s tests -p "test_*.py"
 python tests/smoke_modes.py
+python tests/smoke_analysis.py
 ```
 
 ## Nguồn gốc

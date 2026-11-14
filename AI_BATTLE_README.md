@@ -32,12 +32,15 @@ NPC bị hạ sẽ được bỏ qua lượt; thắng khi hạ toàn bộ NPC ho
 Người chơi thua khi xe hoặc căn cứ của mình bị phá. Đội NPC dùng chung một căn cứ.
 Luật sát thương giữ cả va chạm đạn với đồng đội như engine gốc.
 
-P tạm dừng, N đi từng lượt AI, +/- đổi tốc độ, R chơi lại, Esc về setup.
+B ở setup đổi ngân sách chung. Trong trận: P tạm dừng, N đi từng hành động AI,
+Tab phân tích tìm kiếm (AI BATTLE), V bật/tắt hướng súng, +/- đổi tốc độ, R chơi lại, Esc về setup.
 Khi tạm dừng, bàn phím di chuyển/bắn cũng được khóa; nhấn P để tiếp tục.
 
-## Giữ nguyên thuật toán
+## Thuật toán và các cập nhật
 
-Không sửa `task2/search.py`, `task2/heuristics.py`, `task2/agent.py` hay `task2/game.py`.
+Giữ bản chất bốn cấu hình; cập nhật các file lõi để đồng bộ hòa theo vòng,
+kiểm tra thời gian, cache evaluator và đếm thống kê. Phạt lặp mặc định bằng 0
+cho phép so sánh cùng hàm mục tiêu. [Chi tiết và cách xem UI](ADVERSARIAL_SEARCH.md).
 `ai_battle.py` nối giao diện với API `Agent.act` hiện có.
 `arena.py` bổ sung trạng thái 5 xe và mở rộng xử lý va chạm đạn cho 5 xe.
 

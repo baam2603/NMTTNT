@@ -40,6 +40,8 @@ class ArenaState(GameState):
         return n
 
     def is_terminal(self):
+        if self.max_cycles is not None and self.cycle >= self.max_cycles:
+            return True
         return (self.tanks[0].hp <= 0 or all(t.hp <= 0 for t in self.tanks[1:])
                 or any(b.hp <= 0 for b in self.bases))
 
@@ -48,6 +50,17 @@ class ArenaState(GameState):
         npc_lost = all(t.hp <= 0 for t in self.tanks[1:]) or self.bases[1].hp <= 0
         if human_lost != npc_lost:
             return 1 if human_lost else 0
+        return None
+
+    def termination_reason(self):
+        human = self.tanks[0].hp <= 0 or self.bases[0].hp <= 0
+        npcs = all(t.hp <= 0 for t in self.tanks[1:]) or self.bases[1].hp <= 0
+        if human and npcs:
+            return 'mutual_destruction'
+        if human or npcs:
+            return 'destroyed'
+        if self.max_cycles is not None and self.cycle >= self.max_cycles:
+            return 'cycle_limit'
         return None
 
     def apply_action(self, action, check=True):

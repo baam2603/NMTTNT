@@ -1,35 +1,27 @@
-"""Adversarial search with four primary configurations and terminal-only controls.
+"""Minimax and Alpha-Beta, each with terminal-only or heuristic evaluation.
 
-Four primary configurations compare basic versus advanced leaf evaluation.
-Two explicit terminal-only controls keep non-terminal cutoff values at neutral 0.
-Equal values use stable action order, never scripted moves.
+A depth unit is one player's action. Search never invents a game-ending cycle cap.
+PV recording is for the UI and is disabled in experiments.
 """
 from abc import ABC, abstractmethod
 from math import isfinite
 from time import perf_counter
 
-from heuristics import BasicEvaluator, HeuristicEvaluator, TerminalEvaluator
+from heuristics import HeuristicEvaluator, TerminalEvaluator
 
 INF = float('inf')
 
 
 def state_key(state):
-    """Physical position for repetition detection; independent of elapsed time."""
+    """Physical position for UI PV and external-agent history; independent of time."""
     return (state.rows, state.cols, state.steel, tuple(state.tanks),
             tuple(state.bases), tuple(sorted(state.bullets)),
             state.wall_key, state.to_move)
 
 
-def transposition_key(state):
-    """Search identity includes the draw horizon, unlike repetition identity."""
-    limit = getattr(state, 'max_cycles', None)
-    remaining = None if limit is None else max(0, limit - state.cycle)
-    return state_key(state), remaining
-
-
 def _new_stats():
     return dict(nodes=0, generated=0, leaves=0, cutoffs=0, pruned_actions=0,
-                tt_hits=0, evals=0, order_evals=0, leaf_evals=0)
+                evals=0, order_evals=0, leaf_evals=0)
 
 
 class SearchTimeout(Exception):
@@ -37,14 +29,12 @@ class SearchTimeout(Exception):
 
 
 class SearchAlgorithm(ABC):
-    def __init__(self, evaluator=None, name=None, repeat_aware=False):
-        self.evaluator = evaluator if evaluator is not None else BasicEvaluator()
+    def __init__(self, evaluator=None, name=None):
+        self.evaluator = evaluator if evaluator is not None else TerminalEvaluator()
         self.name = name or type(self).__name__.lower()
-        self.repeat_aware = repeat_aware
         self.stats = _new_stats()
         self._deadline = None
-        self._history = None
-        self._penalty = 0
+        self._track_pv = True
         self._root_order = []
         self._root_static = {}
         self._best_moves = {}
@@ -70,9 +60,6 @@ class SearchAlgorithm(ABC):
         value = self._evaluate(state, me)
         return value + depth if value > 0 else value - depth if value < 0 else 0
 
-    def _prepare_search(self):
-        pass
-
     @abstractmethod
     def value(self, state, depth, me, alpha, beta):
         raise NotImplementedError
@@ -94,19 +81,16 @@ class SearchAlgorithm(ABC):
         best_action, best_score, alpha = None, -INF, -INF
         rows, best_line = [], []
         for action, child in self._children(state, self._root_order):
-            penalty = 0
-            if self.repeat_aware and self._history and not child.is_terminal():
-                penalty = self._penalty * self._history.get(state_key(child), 0)
             before, alpha_before = self.stats['nodes'], alpha
-            score = self.value(child, depth - 1, me, alpha + penalty, INF) - penalty
+            score = self.value(child, depth - 1, me, alpha, INF)
             # A fail-low Alpha-Beta result is an upper bound, not an exact value.
             bound = 'upper' if isinstance(self, AlphaBeta) and score <= alpha_before else 'exact'
             rows.append(dict(action=action.name, score=score, bound=bound,
                              static=self._root_static.get(action),
-                             nodes=self.stats['nodes'] - before, penalty=penalty))
+                             nodes=self.stats['nodes'] - before))
             if score > best_score:
                 best_action, best_score = action, score
-                best_line = self._principal_variation(state, action, depth)
+                best_line = self._principal_variation(state, action, depth) if self._track_pv else []
             alpha = max(alpha, score)
         return best_action, best_score, rows, best_line
 
@@ -118,25 +102,23 @@ class SearchAlgorithm(ABC):
                 break
             line.append({'player': current.to_move, 'action': action.name})
             current = current.apply_action(action, check=False)
-            action = self._best_moves.get((transposition_key(current), remaining - 1))
+            action = self._best_moves.get((state_key(current), remaining - 1))
         return line
 
-    def search(self, state, depth=4, time_limit_ms=None, history=None, repeat_penalty=0):
+    def search(self, state, depth=4, time_limit_ms=None, track_pv=True):
         if not isinstance(depth, int) or isinstance(depth, bool) or depth < 1:
             raise ValueError('depth phải là số nguyên >= 1')
         if time_limit_ms is not None and (isinstance(time_limit_ms, bool)
                 or not isinstance(time_limit_ms, (int, float))
                 or not isfinite(time_limit_ms) or time_limit_ms <= 0):
             raise ValueError('time_limit_ms phải là số hữu hạn > 0')
-        if (isinstance(repeat_penalty, bool) or not isinstance(repeat_penalty, (int, float))
-                or not isfinite(repeat_penalty) or repeat_penalty < 0):
-            raise ValueError('repeat_penalty phải là số hữu hạn >= 0')
+        if not isinstance(track_pv, bool):
+            raise ValueError('track_pv phải là bool')
         start = perf_counter()
         self._deadline = None if time_limit_ms is None else start + time_limit_ms / 1000
         self.stats = _new_stats()
-        self._history, self._penalty = history, repeat_penalty
+        self._track_pv = track_pv
         self._root_static, self._best_moves = {}, {}
-        self._prepare_search()
         me = state.to_move
         reached, score, rows, pv = 0, None, [], []
         timed_out = False
@@ -171,7 +153,7 @@ class SearchAlgorithm(ABC):
                             depth=depth, depth_reached=reached,
                             score=score, time_ms=(perf_counter() - start) * 1000,
                             timed_out=timed_out, fallback=reached == 0 and action is not None,
-                            root_actions=rows, pv=pv, repeat_penalty=repeat_penalty,
+                            root_actions=rows, pv=pv, track_pv=track_pv,
                             **self.stats)
 
 
@@ -188,53 +170,13 @@ class Minimax(SearchAlgorithm):
             value = self.value(child, depth - 1, me, alpha, beta)
             if (maximizing and value > best) or (not maximizing and value < best):
                 best, move = value, action
-        self._best_moves[(transposition_key(state), depth)] = move
+        if self._track_pv:
+            self._best_moves[(state_key(state), depth)] = move
         return best
 
 
-_EXACT, _LOWER, _UPPER = 0, 1, 2
-
-
 class AlphaBeta(SearchAlgorithm):
-    TT_MIN_DEPTH = 2
-
-    def __init__(self, evaluator=None, name=None, repeat_aware=False, use_tt=True):
-        super().__init__(evaluator, name, repeat_aware)
-        self.use_tt, self._tt = use_tt, {}
-
-    def _prepare_search(self):
-        self._tt = {}
-
     def value(self, state, depth, me, alpha, beta):
-        self._tick()
-        key = (transposition_key(state), depth)
-        cache = self.use_tt and depth >= self.TT_MIN_DEPTH and not state.is_terminal()
-        if cache:
-            entry = self._tt.get(key)
-            if entry is not None:
-                flag, stored, move = entry
-                if flag == _EXACT:
-                    self.stats['nodes'] += 1
-                    self.stats['tt_hits'] += 1
-                    self._best_moves[key] = move
-                    return stored
-                if flag == _LOWER:
-                    alpha = max(alpha, stored)
-                else:
-                    beta = min(beta, stored)
-                if alpha >= beta:
-                    self.stats['nodes'] += 1
-                    self.stats['tt_hits'] += 1
-                    return stored
-        # Use the effective window for conservative TT bound classification.
-        alpha_orig, beta_orig = alpha, beta
-        score = self._search_node(state, depth, me, alpha, beta)
-        if cache:
-            flag = _UPPER if score <= alpha_orig else _LOWER if score >= beta_orig else _EXACT
-            self._tt[key] = flag, score, self._best_moves.get(key)
-        return score
-
-    def _search_node(self, state, depth, me, alpha, beta):
         self._tick()
         self.stats['nodes'] += 1
         if state.is_terminal() or depth <= 0:
@@ -255,34 +197,29 @@ class AlphaBeta(SearchAlgorithm):
                 self.stats['cutoffs'] += 1
                 self.stats['pruned_actions'] += len(actions) - index - 1
                 break
-        self._best_moves[(transposition_key(state), depth)] = move
+        if self._track_pv:
+            self._best_moves[(state_key(state), depth)] = move
         return best
 
 
-PRIMARY_MODES = ('minimax', 'alphabeta', 'heuristic_minimax', 'heuristic_alphabeta')
-CONTROL_MODES = ('terminal_minimax', 'terminal_alphabeta')
-MODE_PAIRS = (('minimax', 'alphabeta'),
-              ('heuristic_minimax', 'heuristic_alphabeta'),
-              CONTROL_MODES)
-
 MODES = {
-    'minimax': (Minimax, BasicEvaluator, False),
-    'alphabeta': (AlphaBeta, BasicEvaluator, False),
-    'heuristic_minimax': (Minimax, HeuristicEvaluator, True),
-    'heuristic_alphabeta': (AlphaBeta, HeuristicEvaluator, True),
-    'terminal_minimax': (Minimax, TerminalEvaluator, False),
-    'terminal_alphabeta': (AlphaBeta, TerminalEvaluator, False),
+    'minimax': (Minimax, TerminalEvaluator),
+    'alphabeta': (AlphaBeta, TerminalEvaluator),
+    'heuristic_minimax': (Minimax, HeuristicEvaluator),
+    'heuristic_alphabeta': (AlphaBeta, HeuristicEvaluator),
 }
+MODE_PAIRS = (('minimax', 'alphabeta'),
+              ('heuristic_minimax', 'heuristic_alphabeta'))
 
 
 def build_search(mode, evaluator=None):
     if mode not in MODES:
         raise ValueError(f'Mode không hợp lệ: {mode}. Chọn: {list(MODES)}')
-    algorithm, default_evaluator, repeat = MODES[mode]
-    return algorithm(evaluator if evaluator is not None else default_evaluator(),
-                     name=mode, repeat_aware=repeat)
+    algorithm, default_evaluator = MODES[mode]
+    return algorithm(evaluator if evaluator is not None else default_evaluator(), name=mode)
 
 
 def choose_action(state, depth=4, mode='heuristic_alphabeta', time_limit_ms=None,
-                  history=None, repeat_penalty=0, evaluator=None):
-    return build_search(mode, evaluator).search(state, depth, time_limit_ms, history, repeat_penalty)
+                  evaluator=None, track_pv=True):
+    # A fresh engine/evaluator for every independent measurement.
+    return build_search(mode, evaluator).search(state, depth, time_limit_ms, track_pv)

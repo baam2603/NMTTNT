@@ -26,7 +26,6 @@ TANK_HP = 6
 BASE_HP = 9
 WALL_HP = 3
 TOC_DO_DAN = 3
-MAX_CYCLES = 300
 Tank = namedtuple("Tank", "r c d hp")
 Base = namedtuple("Base", "r c hp")
 Bullet = namedtuple("Bullet", "r c d owner")
@@ -54,7 +53,6 @@ class GameState:
         self.bullets = []
         self.to_move = 0
         self.cycle = 0
-        self.max_cycles = MAX_CYCLES
         self._wkey = None
         self._term = None
 
@@ -108,7 +106,6 @@ class GameState:
         n.bases = list(self.bases)
         n.bullets = list(self.bullets)
         n.to_move, n.cycle = self.to_move, self.cycle
-        n.max_cycles = self.max_cycles
         n._wkey = self._wkey
         n._term = None
         return n
@@ -139,8 +136,6 @@ class GameState:
         return self.in_bounds(r, c) and self.entity_at(r, c) is None
 
     def is_terminal(self):
-        if self.max_cycles is not None and self.cycle >= self.max_cycles:
-            return True
         if self._term is None:
             self._term = (any(t.hp <= 0 for t in self.tanks)
                           or any(b.hp <= 0 for b in self.bases))
@@ -160,8 +155,6 @@ class GameState:
             return 'mutual_destruction'
         if any(lost):
             return 'destroyed'
-        if self.max_cycles is not None and self.cycle >= self.max_cycles:
-            return 'cycle_limit'
         return None
 
     def legal_actions(self):

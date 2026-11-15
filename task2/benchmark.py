@@ -7,10 +7,10 @@ from pathlib import Path
 from statistics import mean, median
 
 from game import Bullet, GameState
-from search import MODES, PRIMARY_MODES, MODE_PAIRS, choose_action
+from search import MODES, MODE_PAIRS, choose_action
 
 
-MODES_ORDER = PRIMARY_MODES
+MODES_ORDER = tuple(MODES)
 
 def make_map(walls=(), steel=()):
     grid = [[" " for _ in range(9)] for _ in range(9)]
@@ -67,7 +67,7 @@ def measure_one(state, scenario, player, depth, mode, repeat):
         snapshot.to_move, snapshot.cycle,
     )
 
-    action, info = choose_action(snapshot, depth=depth, mode=mode)
+    action, info = choose_action(snapshot, depth=depth, mode=mode, track_pv=False)
 
     after = (
         tuple(snapshot.tanks), tuple(snapshot.bases),
@@ -96,9 +96,10 @@ def measure_one(state, scenario, player, depth, mode, repeat):
         "cutoffs": info["cutoffs"],
         "pruned_actions": info["pruned_actions"],
         "order_evals": info["order_evals"],
+        "leaf_evals": info["leaf_evals"],
+        "track_pv": info["track_pv"],
         "total_evals": info["evals"],
         "depth_reached": info["depth_reached"],
-        "tt_hits": info["tt_hits"],
         "nodes_per_second": round(nodes / (elapsed / 1000), 1) if elapsed > 0 else 0,
     }
 
@@ -145,6 +146,7 @@ def summarize(rows):
             "mean_cutoffs": round(mean(x["cutoffs"] for x in samples), 2),
             "mean_pruned_actions": round(mean(x["pruned_actions"] for x in samples), 2),
             "mean_order_evals": round(mean(x["order_evals"] for x in samples), 2),
+            "mean_leaf_evals": round(mean(x["leaf_evals"] for x in samples), 2),
             "mean_total_evals": round(mean(x["total_evals"] for x in samples), 2),
             "chosen_action": samples[0]["action"],
             "score": samples[0]["score"],
@@ -186,8 +188,8 @@ def main():
     parser.add_argument("--players", choices=["0", "1", "both"], default="both")
     parser.add_argument("--scenarios", nargs="+",
                         choices=list(build_scenarios()) + ["all"], default=["all"])
-    parser.add_argument("--modes", nargs="+", choices=list(MODES), default=list(PRIMARY_MODES),
-                        help="Default: four basic/advanced modes; terminal_* are explicit controls.")
+    parser.add_argument("--modes", nargs="+", choices=list(MODES), default=list(MODES_ORDER),
+                        help="Four required configurations; no TT, no PV during measurement.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="benchmark_results.csv")
     parser.add_argument("--summary", default="benchmark_summary.csv")
@@ -223,7 +225,7 @@ def main():
     print(f"Da luu: {args.output} ({len(rows)} lan chay)")
     print(f"Da luu: {args.summary} ({len(summary)} dong tong hop)")
     print("Luu y: Evals = so lan goi ham danh gia (leaves + order_evals).")
-    print("MM/AB: BASIC; H-MM/H-AB: ADVANCED; terminal_*: NO HEURISTIC controls.")
+    print("MM/AB: terminal-only; H-MM/H-AB: heuristic. Fresh engine, no TT/PV.")
 
 
 if __name__ == "__main__":

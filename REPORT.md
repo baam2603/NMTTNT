@@ -1,203 +1,161 @@
-# Tank Battle — Mô hình và kết quả tìm kiếm đối kháng
+# Tank Battle — Mô hình và thực nghiệm đối kháng
 
-## 1. Mô hình zero-sum cho hai AI
+## 1. Công thức hóa zero-sum
 
-- Người chơi P0/P1 biết toàn bộ trạng thái; luật không có yếu tố ngẫu nhiên.
-- Trạng thái: địa hình/gạch và HP, thép, hai xe (ô, hướng, HP), hai căn cứ,
-  đạn (ô, hướng, chủ sở hữu), bên tới lượt, vòng hiện tại và giới hạn vòng.
-- Tập hành động hợp lệ lấy từ MOVE_UP/DOWN/LEFT/RIGHT, FIRE, STAY.
-- MOVE đổi hướng và đi một ô nếu trống; khi bị chặn có thể chỉ xoay.
-- Sau lượt P1, đạn đi tối đa 3 ô, kiểm tra từng ô, dừng ngay khi trúng vật cản.
-  Xe/căn cứ/gạch ban đầu có 6/9/3 HP; mỗi hit gây 1 sát thương. Có sát thương phe mình.
-- Thép chặn đạn và không phá được. Hai đạn gặp nhau/đổi ô sẽ triệt tiêu theo luật engine.
-- Mất xe hoặc căn cứ thì thua; hai bên bị hạ đồng thời là hòa. Hết 300 vòng là hòa
-  nếu không có bên bị hạ; phá hủy ở vòng cuối được ưu tiên trước hòa do hết vòng.
-- Utility theo góc nhìn người tìm kiếm: thắng +10000, thua -10000, hòa 0.
-  Đổi người đánh giá thì đổi dấu. Độ sâu còn lại ưu tiên thắng sớm/thua muộn.
+Hai người chơi P0/P1 biết toàn bộ trạng thái, luật xác định, không có yếu tố ngẫu nhiên.
 
-Minimax lấy MAX ở lượt của mình, MIN ở lượt đối thủ. Một depth là một hành động,
-không phải một vòng gồm hai lượt. Tìm kiếm sâu hữu hạn không bảo đảm tối ưu cả trận.
+| Thành phần | Mô hình |
+| --- | --- |
+| Trạng thái | Thép, gạch và HP; hai tank (ô, hướng, HP); hai base; đạn (ô, hướng, chủ); bên tới lượt |
+| Hành động | MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT, FIRE, STAY; chỉ trả hành động hợp lệ |
+| Chuyển trạng thái | Áp dụng trên bản sao; di chuyển tối đa một ô, bắn theo hướng xe; cập nhật va chạm |
+| Terminal | Có tank hoặc base bị phá; không phụ thuộc số cycle đã trôi qua |
+| Utility | Theo góc nhìn người tìm kiếm: thắng +10000, thua −10000, hai bên cùng mất điều kiện sống thì hòa 0 |
 
-## 2. Thiết kế: tách cơ chế tìm kiếm và hàm đánh giá
+Đổi người đánh giá thì đổi dấu utility/heuristic. Khi gặp terminal trong cây, phần
+thưởng độ sâu còn lại ưu tiên thắng sớm/thua muộn, áp dụng giống nhau cho cả bốn cấu hình.
+Tank/base/gạch có HP khởi tạo 6/9/3; một hit gây 1 damage. Sau mỗi cycle, đạn tiến
+3 ô tối đa, kiểm tra từng ô và dừng ngay khi trúng vật cản. Thép không phá được.
+Số cycle là bộ đếm phục vụ hiển thị, không tham gia utility hoặc điều kiện terminal.
 
-Minimax và Alpha-Beta quyết định bằng cây MAX/MIN. Để hoạt động khi giới hạn độ sâu,
-chúng cần một quy tắc chấm lá chưa kết thúc. Chương trình cung cấp bốn cấu hình chính
-với hai mức đánh giá, cùng hai đối chứng terminal-only có thể chọn ngay trên UI/CLI.
+## 2. Giả định mô hình hóa được khai báo
 
-| Mode | Đánh giá lá chưa kết thúc | Cắt tỉa | Vai trò |
-| --- | --- | --- | --- |
-| minimax | HP + Manhattan tới căn cứ địch | Không | Minimax BASIC |
-| alphabeta | Cùng BASIC | Có | Alpha-Beta BASIC |
-| heuristic_minimax | HP + đường tới vị trí bắn + ngắm + đạn | Không | Nâng cao |
-| heuristic_alphabeta | Cùng nâng cao | Có | Nâng cao |
-| terminal_minimax | 0 trung tính | Không | Đối chứng không heuristic |
-| terminal_alphabeta | 0 trung tính | Có | Đối chứng không heuristic |
+Đề chưa quy định hết thứ tự xử lý và các va chạm phụ. Bản này chọn:
 
-**BASIC cũng là heuristic đơn giản.** Không coi BASIC là “không heuristic” và không
-khẳng định đề buộc mọi lá chưa kết thúc nhận 0. Nếu cần trình bày phép so sánh nghiêm
-ngặt không/có heuristic, dùng hai terminal_* và hai heuristic_*. Tên mode vẫn được
-giữ trong từng CSV để không ghép nhầm dữ liệu của các evaluator.
+| Chỗ cần quy ước | Cách thực hiện |
+| --- | --- |
+| Lượt trong một cycle | P0 hành động, P1 nhìn trạng thái sau P0 rồi hành động, sau đó cập nhật đạn. Đây là mô hình luân phiên thông tin đầy đủ, không phải chọn nước đồng thời kín |
+| Đổi hướng | Ô đích trống: đổi hướng và đi một ô; ô bị chặn: có thể chỉ xoay tại chỗ |
+| Đạn gặp đạn | Cùng ô hoặc hoán đổi ô trong một bước thì triệt tiêu |
+| Tank vào ô có đạn | Mất HP bằng số đạn trong ô, các đạn đó biến mất |
+| Cả hai bên bị phá trong cùng cập nhật | Hòa nếu cả hai cùng mất tank hoặc base |
+| Bắn vào phe mình | Có sát thương tank/base; gạch không thuộc phe |
+| Map nhập có nước/cỏ/băng | Chuyển sang địa hình của mô hình: nước chặn như thép, cỏ/băng thành trống; xem levels_ai/README |
 
-Gọi M = 100 × chênh lệch HP căn cứ + 80 × chênh lệch HP xe, theo góc nhìn MAX:
+Hành động quay về hướng đang nhìn mà bị chặn không tạo thay đổi, nên được thay bằng
+STAY trong tập hành động hợp lệ. Bắn được mô phỏng theo cùng luật ở mọi cấu hình.
+Những giả định trên thống nhất giữa search, UI và bộ chạy thí nghiệm.
 
-- BASIC = M + 10 × (Manhattan của địch tới căn cứ mình − của mình tới căn cứ địch).
-  Có tín hiệu cho tiến triển và tổn thất HP, nhưng không giải bài toán đi vòng thép.
-- Nâng cao = M + 10 × lợi thế chi phí tới vị trí bắn + 30 × lợi thế ngắm
-  + 60 × lợi thế đạn. Không cộng thêm Manhattan của BASIC.
-- Terminal-only chỉ dùng utility thắng/thua/hòa +10000/−10000/0. Ở ngưỡng cắt chưa
-  kết thúc trả 0 trung tính; điểm này không chứng minh kết quả cuối cùng là hòa.
+## 3. Đúng bốn cấu hình tìm kiếm
 
-BASIC và nâng cao giới hạn điểm chưa kết thúc trong [-9900,9900]. Cả sáu cấu hình
-giữ cùng luật, utility terminal và phần thưởng độ sâu còn lại để thắng sớm/thua muộn.
-Tìm kiếm hữu hạn không đồng nghĩa Minimax vét cạn toàn bộ ván đấu. Khi các nhánh cùng
-điểm, dùng thứ tự cố định; không có kịch bản/ngẫu nhiên ép tank phải di chuyển.
+| Cấu hình | Lá chưa kết thúc ở ngưỡng cắt | Cắt tỉa Alpha-Beta |
+| --- | --- | --- |
+| Minimax | 0, không heuristic | Không |
+| Alpha-Beta | 0, không heuristic | Có |
+| Heuristic Minimax | H(s) | Không |
+| Heuristic Minimax + Alpha-Beta | Cùng H(s) | Có |
 
-Dijkstra ngược chạy trên `(ô, hướng)`, bắt đầu từ các vị trí có thể bắn về căn cứ
-địch. Chi phí ước lượng gồm một lần FIRE, thời gian bay, HP gạch chắn; đi một ô tốn
-một hành động và tự đổi hướng, chỉ xoay tại chỗ khi ô phía trước bị chặn. Khi phải
-vào ô gạch, ước lượng cộng HP gạch, lượt xoay nếu cần và một lượt di chuyển. Thép và
-cả hai căn cứ không được đi xuyên; đường ngắm không xuyên thép/căn cứ phe mình.
-Đây là mô hình tĩnh thư giãn: bỏ qua vị trí xe đang di chuyển, thời gian đợi đạn phá
-gạch và thay đổi địa hình khi lập đường. Va chạm chiến thuật vẫn do engine thật
-trong cây tìm kiếm quyết định. Do đó chi phí này không phải số lượt thắng chính xác.
+Minimax lấy MAX ở lượt mình, MIN ở lượt địch. Alpha-Beta trả cùng giá trị khi cùng
+trạng thái, evaluator và depth, nhưng bỏ nhánh khi alpha >= beta. Các nước đồng
+điểm có thể được chọn khác nhau. Một depth là một hành động của một bên.
 
-Điểm ngắm dò vật đầu tiên, phân biệt địch/phe mình và giảm giá trị khi bị gạch chắn.
-Dự báo đạn dùng engine va chạm trên **bản sao** tối đa 3 vòng, giả định xe giữ vị
-trí và không sinh thêm đạn. Xét gạch, đạn gặp/đổi ô, sát thương phe mình, HP thấp và
-chiết khấu theo thời gian; không coi đây là sát thương chắc chắn vì đối thủ có thể
-né/bắn chặn. Điểm heuristic chưa kết thúc giới hạn [-9900,9900] để utility terminal trội hơn;
-đổi góc nhìn thì đổi dấu, terminal thắng/thua/hòa vẫn ±10000/0. Phạt lặp mặc định bằng 0.
+Hai bản thuần dùng TerminalEvaluator: thắng/thua/hòa có utility, lá chưa kết thúc
+ở ngưỡng cắt nhận 0 trung tính. Đây là baseline giới hạn độ sâu, không phải vét cạn
+tới terminal toàn bộ ván. Điểm 0 không chứng minh trạng thái sẽ hòa. Nếu chưa thấy
+thắng/thua, các nước có thể đồng điểm và FIRE được giữ theo thứ tự cố định. Nếu nhìn
+thấy nguy cơ thua hoặc cơ hội thắng, bản thuần vẫn có thể di chuyển/né/bắn phù hợp.
 
-## 3. Tối ưu và thống kê
+Hai bản heuristic dùng:
 
-- Alpha-Beta loại các nhánh không thể cải thiện lựa chọn; bảng chuyển vị lưu
-  exact/lower/upper bound và độ sâu. Khóa tìm kiếm gồm số vòng còn lại; khóa lặp
-  chỉ xét vị trí vật lý để phát hiện quay lại vị trí cũ.
-- Sắp xếp hành động gốc, ưu tiên nước tốt từ lần tìm sâu trước.
-- Có deadline: tìm sâu dần, trả kết quả hoàn tất cuối và luôn có nước hợp lệ dự phòng.
-  Deadline kiểm tra trước các nút/evaluator, là ngân sách mềm, không cưỡng bức ngắt
-  một evaluator hay AI ngoài đang chạy. Chế độ đo có ngân sách ghi cả lần vượt.
-- SearchAgent tái sử dụng evaluator/cache Dijkstra giữa các lượt; TT được xóa mỗi lượt.
-  Cache đường đi giới hạn 512 mục, khóa gồm địa hình, HP gạch và vị trí căn cứ,
-  không phụ thuộc vị trí xe; khi gạch đổi HP phải tính lại.
-- Thử hành động trên bản sao, không sửa trạng thái thật.
-- Đếm đủ `evals = order_evals + leaf_evals`. Tổng thời gian/nút tính cả vòng tìm kiếm
-  bị ngắt; các dòng lựa chọn trên UI thuộc lần hoàn tất cuối.
+`H(s) = 100 ΔHP_base + 80 ΔHP_tank + 10 Δđường_bắn + 30 Δngắm + 60 Δđạn`.
 
-Cùng trạng thái/evaluator/độ sâu: Alpha-Beta phải khớp giá trị Minimax; các nước
-đồng điểm có thể được chọn khác nhau. Không so raw score giữa hai evaluator như
-cùng một thang đo chất lượng.
+Mỗi Δ là lợi thế của mình so với đối thủ. Đường bắn dùng Dijkstra ngược tới vị trí
+có thể bắn về base địch, xét hướng, thép và chi phí phá gạch. Ngắm xét vật đầu tiên
+trên tia và phe của mục tiêu. Đạn được dự báo trên bản sao tối đa 3 cycle, giả định
+xe giữ nguyên vị trí/không bắn thêm, dùng chính luật va chạm của engine. Đây là ước
+lượng, không bảo đảm đối thủ không né hay đường phá gạch hoàn thành đúng số lượt đó.
+Điểm chưa kết thúc giới hạn [-9900,9900] để utility terminal luôn trội hơn.
 
-## 4. UI và nhập thuật toán nhóm khác
+Bản nộp chỉ có bốn mode trong bảng, không dùng bảng chuyển vị TT hay phạt lặp.
+Cache đường đi chỉ là cache tính heuristic theo địa hình/HP gạch/base, giới hạn 512
+mục; không phải TT của tìm kiếm. Agent sống tái dùng cache trong trận để chạy nhanh,
+reset khi tạo agent mới. Mỗi phép đo snapshot dùng evaluator mới hoàn toàn.
 
-Pygame vẽ giao diện classic. Tab hiển thị hành động, điểm/cận, số nút, cắt tỉa,
-TT và chuỗi nước dự đoán. `=` là giá trị chính xác, `<=` là cận trên từ cắt tỉa.
-Chuỗi dự đoán không ép đối thủ thực hiện: mỗi bên tìm kiếm lại khi tới lượt.
-Hoạt ảnh đạn chạy trên các bản sao riêng, không chuyển trạng thái phát lại cho agent.
+## 4. Chạy thời gian thực và giao diện
 
-Đặt file .py trong task2/ hoặc agents/, nhấn F5. Có thể cung cấp
-`create_agent(player_id)` trả đối tượng có `act`, hoặc hàm `choose_action(state)` /
-`act(state)`. Nếu hỗ trợ, loader chuyển tiếp `time_limit_ms`, `history` và gọi reset.
-Nước trả về có thể là Action, số enum hoặc tên; engine kiểm tra lại tính hợp lệ.
-File `task2/external_greedy.py` là ví dụ thử tích hợp. AI ngoài tự tuân thủ ngân sách.
+Có deadline thì tìm sâu dần từ 1 tới depth chọn; lấy kết quả hoàn tất cuối, luôn có
+hành động hợp lệ dự phòng. Đây là ngân sách mềm: không cưỡng bức ngắt một evaluator
+hay AI ngoài đang chạy. Không deadline thì hoàn tất đúng depth yêu cầu.
 
-## 5. Kiểm chứng thiết kế
+Pygame chạy AI ở luồng riêng, phát hoạt ảnh đạn từ dữ liệu riêng. Tab hiển thị độ
+sâu thực, thời gian, nút, cắt tỉa, điểm/cận từng nước và PV. PV là chuỗi dự đoán,
+không ép đối thủ làm theo. `=` là giá trị chính xác; `<=` là cận trên do cắt tỉa.
 
-39 kiểm thử phát triển chạy ngoài gói nộp gọn: 24 kiểm thử nền, 9 kiểm thử evaluator
-và 6 kiểm thử tích hợp thiết kế. Oracle vét cạn độc lập trên 40 map/hai bên được mở
-rộng cho cả ba cặp evaluator. Bao gồm cây tính tay max(min(3,5),min(2,9))=3; cận
-Alpha-Beta, PV, TT, deadline, khóa thời gian; va chạm/HP/hòa, nhập AI ngoài, chuyển
-35 map và không sửa trạng thái đầu vào. Cặp Minimax/Alpha-Beta phải khớp giá trị,
-không nhất thiết cùng nước khi đồng điểm.
+Cơ chế nhập nhóm khác: đặt .py trong task2/ hoặc agents/, nhấn F5. Hỗ trợ
+`create_agent(player_id)` trả đối tượng có act, hoặc module có choose_action/act.
+Loader chuyển tiếp time_limit_ms/history nếu hàm hỗ trợ, gọi reset nếu có; nước
+trả về có thể là Action, số enum hoặc tên, được kiểm tra hợp lệ trước khi áp dụng.
+Ví dụ: task2/external_greedy.py. AI ngoài tự tuân thủ ngân sách thời gian.
 
-Tình huống hồi quy ở depth 4: xe 6 HP gặp đạn sắp trúng, BASIC chọn né để giữ đủ HP,
-terminal-only chọn FIRE vì mất 1 HP vẫn chưa làm đổi utility 0. Khi xe còn 1 HP,
-terminal-only cũng chọn né vì đã nhìn thấy thua. Kiểm tra riêng tiến tới mục tiêu,
-thắng ngay, tự bắn căn cứ chí mạng, hướng/gạch/thép, dự báo va chạm đạn, cache,
-zero-sum và terminal trội hơn ước lượng.
+## 5. Giới hạn môi trường không phải luật hòa
 
-Pygame kiểm tra cả sáu lựa chọn, tạo agent/áp dụng nước đi, gợi ý loại evaluator và
-bảng Tab; mặc định BASIC Alpha-Beta đấu nâng cao Alpha-Beta. Hai CONTROL dùng đúng
-TerminalEvaluator như API truyền evaluator trực tiếp. Bộ kiểm tra nền xác nhận một
-người/bốn NPC, hai AI, dừng/đi từng lượt và map gốc. Bố cục và hoạt ảnh không đổi.
+GameState không có max_cycles và is_terminal chỉ xét phá hủy. UI chơi bình thường
+không tự kết thúc sau 300 cycle. Người dùng có thể dừng hoặc thoát.
 
-## 6. Thực nghiệm cơ bản/nâng cao và đối chứng terminal-only
+Tournament dùng --max-cycles để tránh thí nghiệm chạy vô hạn. play_match cũng có
+max_plies (mặc định 400) và max_cycles tùy chọn; đây là giới hạn của bộ chạy, không
+được gửi vào trạng thái search. Tournament dùng max_plies=None và max_cycles đã chọn.
+Trận hết ngân sách mà chưa có phá hủy được ghi status=stopped, winner=unfinished,
+reason=experiment_cycle_limit, không tính vào hòa hoặc thắng/thua. Nếu phá hủy ở
+cycle cuối thì ghi kết quả thật. Hòa chỉ dành cho phá hủy hai bên cùng lúc.
 
-Dữ liệu/môi trường/lệnh tái hiện: [experiments/README.md](experiments/README.md).
-Profile `basic_advanced_terminal_controls_v2`, Python 3.12.14/Linux x86_64, chưa phải
-máy macOS Intel i5 của đề. Số liệu được đo lại cho thiết kế hiện tại. Mọi phép đo
-không deadline/phạt lặp, trừ khi có ghi khác. Không có agent fault trong các trận.
+## 6. Thí nghiệm công bằng
 
-### Snapshot cùng độ sâu
+Cùng 5 map DEFAULT, OPEN, WALLS, DEFENSE, BULLET, cùng vị trí/HP và luật. Snapshot
+đo cả hai bên, depth 2/4, mỗi cấu hình lặp 3 lần; thứ tự mode xáo bằng seed 42.
+Mỗi phép đo tạo engine/evaluator mới: không dùng lại cache giữa các lần đo.
 
-- `search_fixed_depth.csv`: 240 lượt = 5 map × 2 bên × depth 2/4 × 3 lần × 4 mode
-  chính. Summary 80 nhóm, kiểm chứng 120 cặp Minimax/Alpha-Beta cùng evaluator.
-- `search_terminal_control.csv`: 120 lượt với cùng map/bên/depth/lần lặp, chỉ hai
-  terminal_*. Summary 40 nhóm, kiểm chứng 60 cặp terminal Minimax/Alpha-Beta.
+Cả Minimax và Alpha-Beta không có TT. PV tắt hoàn toàn bằng track_pv=False: không
+lưu best-move hay tính khóa PV ở các nút, không dựng chuỗi dự đoán. Cùng cách sắp
+xếp con tại gốc cho hai thuật toán. Chi phí này có trong time_ms và được tách rõ:
 
-Map DEFAULT, OPEN, WALLS, DEFENSE, BULLET; mọi lượt đạt độ sâu yêu cầu. Cột evaluator
-phân biệt basic/heuristic/terminal_only. File summary có median/mean, nút/lá, đánh
-giá và cắt tỉa. Lặp snapshot phục vụ đo thời gian, không tạo các trận độc lập.
+- order_evals: số lần gọi evaluator để sắp xếp gốc.
+- leaf_evals: số lần đánh giá lá/terminal trong cây.
+- total_evals = order_evals + leaf_evals.
+- nodes: số lần vào nút tìm kiếm, gồm gốc; generated gồm cả con tạo khi sắp xếp.
+- Thời gian/nút khi có deadline tính cả vòng bị ngắt; bảng lựa chọn thuộc vòng hoàn tất cuối.
 
-### Đối đầu bốn cấu hình chính, đổi bên
+Với terminal-only, sắp xếp thường không giúp phân biệt vì điểm bằng 0; vẫn áp dụng
+cùng quy tắc và ghi riêng chi phí. Không so raw score giữa hai evaluator như cùng
+thang chất lượng. Thí nghiệm tournament đổi bên, cùng depth 3, dừng sau 60 cycle
+ở môi trường; PV cũng tắt. Thời gian trong trận phụ thuộc các trạng thái đã đi qua
+và cache trong trận, nên dùng snapshot để so chi phí trên cùng trạng thái.
 
-`tournament_fixed_depth.csv`: 60 trận = 5 map × 6 cặp × 2 bên, depth 3, tối đa
-60 vòng. Cơ bản so với nâng cao:
+Dữ liệu/môi trường/lệnh: [experiments/README.md](experiments/README.md).
+Máy đo Python 3.12.14/Linux x86_64, chưa phải macOS 13.7.8 Intel i5 của đề.
 
-| Mode | Trận | Thắng | Thua | Hòa | Mean ms/nước | Mean nút/nước |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| alphabeta | 30 | 7 | 23 | 0 | 1.011 | 61.95 |
-| heuristic_alphabeta | 30 | 19 | 3 | 8 | 2.953 | 56.86 |
-| heuristic_minimax | 30 | 19 | 3 | 8 | 6.907 | 230.3 |
-| minimax | 30 | 7 | 23 | 0 | 2.438 | 222.02 |
+### Kết quả đã đo
 
-### Đối chứng không/có heuristic đúng nghĩa, đổi bên
+240 lượt snapshot hoàn thành đúng độ sâu, 120 cặp Minimax/Alpha-Beta cùng evaluator
+khớp giá trị. File CSV ghi riêng số lần đánh giá gốc và đánh giá lá.
 
-`tournament_terminal_control.csv`: 60 trận, cùng map/bên/depth/giới hạn, chỉ dùng
-terminal_minimax, terminal_alphabeta, heuristic_minimax, heuristic_alphabeta.
-Đây là bộ kết quả dành cho phần so sánh terminal-only với heuristic:
+60 trận đối đầu có 8 trận bị dừng vì hết ngân sách, không gán hòa; 8 trận hòa thật
+do phá hủy đồng thời. Không có lỗi agent. Bảng tổng hợp theo từng mode:
 
-| Mode | Trận | Thắng | Thua | Hòa | Mean ms/nước | Mean nút/nước |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| heuristic_alphabeta | 30 | 19 | 3 | 8 | 3.714 | 59.06 |
-| heuristic_minimax | 30 | 19 | 3 | 8 | 8.532 | 231.63 |
-| terminal_alphabeta | 30 | 3 | 19 | 8 | 0.909 | 55.22 |
-| terminal_minimax | 30 | 3 | 19 | 8 | 2.409 | 238.68 |
+| Mode | Trận | Thắng | Thua | Hòa thật | Chưa kết thúc | Mean ms/nước | Mean nút/nước |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| alphabeta | 30 | 3 | 19 | 0 | 8 | 1.073 | 55.9 |
+| heuristic_alphabeta | 30 | 19 | 3 | 8 | 0 | 4.94 | 59.21 |
+| heuristic_minimax | 30 | 19 | 3 | 8 | 0 | 12.666 | 231.63 |
+| minimax | 30 | 3 | 19 | 0 | 8 | 3.383 | 240.98 |
 
-Thời gian trong trận phụ thuộc trạng thái đã đi qua và cache; dùng snapshot để so
-chi phí cùng trạng thái. Alpha-Beta giữ giá trị Minimax cùng evaluator/depth, giảm
-nhánh chứ không tự tạo hàm đánh giá thông minh hơn. Heuristic tốn thêm chi phí;
-không khẳng định luôn nhanh hơn hoặc luôn thắng. Chưa công bố số liệu cùng ngân
-sách thời gian; `--time-limit-ms` vẫn hỗ trợ giao thức đó.
+## 7. Kiểm chứng và giới hạn
 
-### Cùng đối thủ GreedyAgent
+22 kiểm thử có thể chạy bằng `python -m unittest discover -s tests -v`, gồm:
 
-`behavior_fixed_opponent.csv`: 36 trận = 3 map (DEFAULT, WALLS, ORIGINAL_20) × 6
-cấu hình × 2 bên; depth 3, tối đa 60 vòng. Movements chỉ đếm đổi ô, rotations là
-xoay tại chỗ, fires/stays là bắn/bỏ lượt; các trận có thể dài khác nhau.
+- Cây tính tay max(min(3,5),min(2,9))=3, oracle vét cạn độc lập trên 40 map/hai bên;
+  so điểm, nước tối ưu, cận và PV của cả hai cặp Minimax/Alpha-Beta.
+- Tắt PV không đổi điểm/nước và không tạo khóa PV; engine/evaluator mới mỗi lần đo;
+  thống kê đủ order_evals/leaf_evals; đúng bốn mode và đúng evaluator.
+- Luật di chuyển, HP, va chạm đạn từng ô, đạn gặp nhau, tank đi vào đạn, sát thương
+  phe mình và phá hủy đồng thời. Bản terminal-only né khi cây nhìn thấy thua.
+- Số cycle lớn không tạo terminal; cap của môi trường không tạo hòa; phá hủy cuối
+  cycle được ưu tiên; thống kê unfinished riêng; UI mặc định không có cap.
 
-| Mode | Trận | Thắng | Thua | Hòa | Số lần đổi ô | Số lần bắn |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| alphabeta | 6 | 4 | 2 | 0 | 50 | 81 |
-| heuristic_alphabeta | 6 | 5 | 1 | 0 | 47 | 63 |
-| heuristic_minimax | 6 | 5 | 1 | 0 | 47 | 63 |
-| minimax | 6 | 4 | 2 | 0 | 50 | 81 |
-| terminal_alphabeta | 6 | 0 | 2 | 4 | 0 | 302 |
-| terminal_minimax | 6 | 0 | 2 | 4 | 0 | 302 |
+Kiểm tra phát triển bổ sung xác nhận nhập AI ngoài, 35 map, nội suy không sửa trạng
+thái, Pygame một người/bốn NPC và hai AI, pause/step/Tab, tài nguyên và âm thanh.
 
-BASIC đã phân biệt được tiến triển và mất HP trong các tình huống đã thử; terminal-only
-có thể đứng bắn vì đồng điểm. Việc đổi ô nhiều hơn không tự chứng minh chơi tốt hơn.
-Một tập tình huống xác định với một đối thủ không cho tỷ lệ thắng tổng quát. Kiểm
-chứng cơ chế tìm kiếm dựa vào oracle/cây tính tay, không dựa riêng vào hình ảnh hay
-thắng/thua. Mọi cấu hình đều chỉ nhìn trước hữu hạn, không bảo đảm tối ưu cả trận.
-
-## 7. Nguồn bản đồ
-
-- DEFAULT, OPEN, WALLS, DEFENSE, BULLET: các tình huống cơ sở để kiểm tra tìm kiếm,
-  vật cản, phòng thủ và đạn.
-- ORIGINAL_01 … ORIGINAL_35: 26×26 nguồn gộp thành 13×13; nước thành thép, cỏ/băng
-  thành trống, ưu tiên ô cản khi nhóm hỗn hợp. Thêm căn cứ trên cho trận hai bên.
-  [Quy tắc và định dạng](levels_ai/README.md).
-
-Phần một người đấu bốn NPC là mở rộng: mỗi NPC dự đoán qua bản chiếu hai xe,
-coi đồng đội như vật cản. Các phân tích zero-sum và số liệu ở đây tập trung hai AI.
+Tìm kiếm hữu hạn không bảo đảm tối ưu cả trận. Hình ảnh tank đứng bắn không tự
+chứng minh search sai hoặc đúng; dùng oracle/cây tính tay để kiểm chứng cơ chế.
+Một tập map xác định không đủ khẳng định heuristic luôn thắng. Phần một người/bốn
+NPC dùng bản chiếu hai xe và không thuộc mô hình zero-sum hai AI của phép đo trên.

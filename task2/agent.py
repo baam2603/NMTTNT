@@ -20,9 +20,9 @@ class Agent(ABC):
 
 class SearchAgent(Agent):
     def __init__(self, mode="heuristic_alphabeta", depth=4,
-                 repeat_penalty=0, evaluator=None):
+                 evaluator=None, track_pv=True):
         self.mode, self.depth = mode, depth
-        self.repeat_penalty, self.evaluator = repeat_penalty, evaluator
+        self.evaluator, self.track_pv = evaluator, track_pv
         self.name = mode
         self.engine = build_search(mode, evaluator)
 
@@ -32,7 +32,7 @@ class SearchAgent(Agent):
     def act(self, state, time_limit_ms=None, history=None):
         return self.engine.search(
             state, depth=self.depth, time_limit_ms=time_limit_ms,
-            history=history, repeat_penalty=self.repeat_penalty,
+            track_pv=self.track_pv,
         )
 
 
@@ -91,8 +91,12 @@ def _to_action(raw):
 
 
 def play_match(agent0, agent1, state=None, max_plies=400,
-               time_limit_ms=None, verbose=False):
+               time_limit_ms=None, verbose=False, max_cycles=None):
+    for label, limit in (("max_plies", max_plies), ("max_cycles", max_cycles)):
+        if limit is not None and (isinstance(limit, bool) or not isinstance(limit, int) or limit < 1):
+            raise ValueError(label + " phải là số nguyên dương hoặc None")
     state = state or GameState.from_layout()
+    start_cycle = state.cycle
     agents = (agent0, agent1)
     for p, a in enumerate(agents):
         a.reset(p)
@@ -101,9 +105,11 @@ def play_match(agent0, agent1, state=None, max_plies=400,
     faults = [0, 0]
     overtime = [0, 0]
     plies = 0
-    metrics = [{"time_ms": 0.0, "nodes": 0, "evals": 0, "moves": 0, "depth_sum": 0} for _ in agents]
+    metrics = [{"time_ms": 0.0, "nodes": 0, "evals": 0, "order_evals": 0, "leaf_evals": 0, "moves": 0, "depth_sum": 0} for _ in agents]
 
-    while not state.is_terminal() and plies < max_plies:
+    while (not state.is_terminal()
+           and (max_plies is None or plies < max_plies)
+           and (max_cycles is None or state.cycle - start_cycle < max_cycles)):
         p = state.to_move
         legal = state.legal_actions()
         t0 = perf_counter()
@@ -123,7 +129,8 @@ def play_match(agent0, agent1, state=None, max_plies=400,
         metrics[p]["time_ms"] += elapsed
         metrics[p]["moves"] += 1
         metrics[p]["nodes"] += info.get("nodes", 0)
-        metrics[p]["evals"] += info.get("evals", 0)
+        for key in ("evals", "order_evals", "leaf_evals"):
+            metrics[p][key] += info.get(key, 0)
         metrics[p]["depth_sum"] += info.get("depth_reached", 0)
         if time_limit_ms and elapsed > time_limit_ms * 1.1:
             overtime[p] += 1
@@ -135,7 +142,12 @@ def play_match(agent0, agent1, state=None, max_plies=400,
         if verbose:
             print(f"#{plies} P{p} {agents[p].name}: {action.name}")
 
-    return {"winner": state.winner(), "plies": plies,
+    completed = state.is_terminal()
+    reason = (state.termination_reason() if completed else
+              "experiment_cycle_limit" if max_cycles is not None and state.cycle - start_cycle >= max_cycles
+              else "experiment_ply_limit")
+    return {"winner": state.winner() if completed else None, "plies": plies,
+            "status": "finished" if completed else "stopped",
             "faults": faults, "overtime": overtime, "metrics": metrics,
-            "reason": (state.termination_reason() or "ply_limit"),
+            "reason": reason,
             "final": state}

@@ -23,16 +23,17 @@ class Tournament:
             for left, right in combinations(modes, 2):
                 for mode0, mode1 in ((left, right), (right, left)):
                     state = initial.copy()
-                    state.max_cycles = self.max_cycles
-                    result = play_match(SearchAgent(mode0, self.depth), SearchAgent(mode1, self.depth),
-                                        state=state, max_plies=2*self.max_cycles + 2,
+                    result = play_match(SearchAgent(mode0, self.depth, track_pv=False), SearchAgent(mode1, self.depth, track_pv=False),
+                                        state=state, max_plies=None, max_cycles=self.max_cycles,
                                         time_limit_ms=self.time_limit_ms)
                     winner = result['winner']
                     final = result['final']
+                    outcome = ('unfinished' if result['status'] == 'stopped' else
+                               'draw' if winner is None else winner)
                     row = dict(scenario=scenario, mode0=mode0, mode1=mode1,
                                evaluator0=MODES[mode0][1].name, evaluator1=MODES[mode1][1].name,
                                depth=self.depth, time_limit_ms=self.time_limit_ms,
-                               max_cycles=self.max_cycles, winner='draw' if winner is None else winner,
+                               max_cycles=self.max_cycles, track_pv=False, winner=outcome, status=result['status'],
                                reason=result['reason'], cycles=final.cycle,
                                tank_hp0=final.tanks[0].hp, tank_hp1=final.tanks[1].hp,
                                base_hp0=final.bases[0].hp, base_hp1=final.bases[1].hp)
@@ -47,20 +48,24 @@ class Tournament:
 
     @staticmethod
     def summarize(rows):
-        groups = defaultdict(lambda: dict(games=0, wins=0, losses=0, draws=0, faults=0,
-                                         overtime=0, time_ms=0., nodes=0, evals=0, moves=0, depth_sum=0))
+        groups = defaultdict(lambda: dict(games=0, wins=0, losses=0, draws=0, unfinished=0, faults=0,
+                                         overtime=0, time_ms=0., nodes=0, evals=0, order_evals=0, leaf_evals=0, moves=0, depth_sum=0))
         for row in rows:
             for p in (0, 1):
                 group = groups[row['mode'+str(p)]]
                 group['games'] += 1
-                group['draws' if row['winner'] == 'draw' else 'wins' if row['winner'] == p else 'losses'] += 1
-                for key in ('faults', 'overtime', 'time_ms', 'nodes', 'evals', 'moves', 'depth_sum'):
+                group['unfinished' if row['winner'] == 'unfinished' else
+                      'draws' if row['winner'] == 'draw' else
+                      'wins' if row['winner'] == p else 'losses'] += 1
+                for key in ('faults', 'overtime', 'time_ms', 'nodes', 'evals', 'order_evals', 'leaf_evals', 'moves', 'depth_sum'):
                     group[key] += row[key+str(p)]
         return [dict(mode=mode, games=g['games'], wins=g['wins'], losses=g['losses'], draws=g['draws'],
-                     faults=g['faults'], overtime=g['overtime'],
+                     unfinished=g['unfinished'], faults=g['faults'], overtime=g['overtime'],
                      mean_move_ms=round(g['time_ms']/max(1,g['moves']),3),
                      mean_nodes=round(g['nodes']/max(1,g['moves']),2),
                      mean_evals=round(g['evals']/max(1,g['moves']),2),
+                     mean_order_evals=round(g['order_evals']/max(1,g['moves']),2),
+                     mean_leaf_evals=round(g['leaf_evals']/max(1,g['moves']),2),
                      mean_depth=round(g['depth_sum']/max(1,g['moves']),2)) for mode,g in sorted(groups.items())]
 
 
@@ -70,7 +75,8 @@ def main():
                         default=['default','open','walls'])
     parser.add_argument('--modes', nargs='+', choices=list(MODES), default=list(MODES_ORDER))
     parser.add_argument('--depth', type=int, default=3)
-    parser.add_argument('--max-cycles', type=int, default=40)
+    parser.add_argument('--max-cycles', type=int, default=40,
+                        help='Environment stop limit; unfinished matches are not draws.')
     parser.add_argument('--time-limit-ms', type=float, default=None,
                         help='Omit for equal fixed-depth matches; set for equal-time matches.')
     parser.add_argument('--output', default='tournament_results.csv')

@@ -1,34 +1,28 @@
 {
-  "measured_at_utc": "2026-11-15T04:14:03.848355+00:00",
+  "measured_at_utc": "2026-11-15T05:34:46.015008+00:00",
+  "profile": "assignment_four_modes_v1",
   "python": "3.12.14",
   "system": "Linux",
   "machine": "x86_64",
-  "current_profile": "basic_advanced_terminal_controls_v2",
-  "primary_modes": [
-    "minimax",
-    "alphabeta",
-    "heuristic_minimax",
-    "heuristic_alphabeta"
-  ],
-  "control_modes": [
-    "terminal_minimax",
-    "terminal_alphabeta"
-  ],
-  "evaluators": {
-    "minimax": "basic",
-    "alphabeta": "basic",
+  "modes": {
+    "minimax": "terminal_only",
+    "alphabeta": "terminal_only",
     "heuristic_minimax": "heuristic",
-    "heuristic_alphabeta": "heuristic",
-    "terminal_minimax": "terminal_only",
-    "terminal_alphabeta": "terminal_only"
+    "heuristic_alphabeta": "heuristic"
   },
+  "transposition_table": false,
+  "track_pv_during_experiments": false,
+  "snapshot_fresh_engine": true,
+  "snapshot_fresh_evaluator": true,
+  "root_ordering": "same evaluator-based ordering in each matching algorithm pair; order_evals reported separately",
   "source_sha256": {
-    "task2/search.py": "914480affc84deb9b07e9aecf99d871ea4d247e18ef70038867673952a2ac232",
-    "task2/heuristics.py": "73a2f45aca3fba80aea91808ee021d5c00cf595279a4026360cf9858fb0b270d",
-    "task2/benchmark.py": "bbb486b9df0303d49e284df0cab575fd8769ef0dfc3589f5078395034baabf45",
-    "task2/tournament.py": "efe665fed77e2aac8ff80831363b614df656400046049fb9630061e93c4a8cbd",
-    "task2/game.py": "f7d23f9f6c0c5af4f3a77a072884d2091826abee53b5c94ba85f7d640b134037",
-    "task2/external_greedy.py": "9e303e25a613920b5c72d4ca037c1d2aa49a785b0e46d4ab328d17bf7fe7156e"
+    "task2/search.py": "0a03e9f29fa9dc0a497426f3d311c787bdcdc4e3e0e197e689f6b6ce3081b550",
+    "task2/game.py": "9c331e1bbd0f480809a021c9a2e4c8df9e4d4e57806cc18cacde0d54aebef570",
+    "task2/heuristics.py": "361d3cd03d05aa7123ef60b2d824dcac8fb2158b0833f5d849076c2c54c19856",
+    "task2/agent.py": "d2578bb09f568fd0e0c963e8d4fa3525c19a7010b458f9f702e5e728e7eea478",
+    "task2/benchmark.py": "1ab1978e8f580fbbe4ca7b50a15a3e0c7ebcf4ae223d6ec12e6511563ed31232",
+    "task2/tournament.py": "c6c942fdd9e1137e7da76a49cea0fdba5f018600a53d5a6b16e71b90fb31e757",
+    "tests/test_core.py": "103412e7f750d01c2f7e9eb6b2f9461a1bcb284d4210282cdcbb8cb5d8cd3911"
   },
   "fixed_depth_search": {
     "scenario_names": [
@@ -47,38 +41,10 @@
       4
     ],
     "repeats": 3,
-    "modes": [
-      "minimax",
-      "alphabeta",
-      "heuristic_minimax",
-      "heuristic_alphabeta"
-    ],
+    "time_limit_ms": null,
+    "shuffle_seed": 42,
     "searches": 240,
-    "time_limit_ms": null
-  },
-  "terminal_control_search": {
-    "scenario_names": [
-      "default",
-      "open",
-      "walls",
-      "defense",
-      "bullet"
-    ],
-    "players": [
-      0,
-      1
-    ],
-    "depths": [
-      2,
-      4
-    ],
-    "repeats": 3,
-    "modes": [
-      "terminal_minimax",
-      "terminal_alphabeta"
-    ],
-    "searches": 120,
-    "time_limit_ms": null
+    "validated_pairs": 120
   },
   "fixed_depth_matches": {
     "scenario_names": [
@@ -89,61 +55,18 @@
       "bullet"
     ],
     "depth": 3,
-    "max_cycles": 60,
+    "environment_max_cycles": 60,
+    "max_plies": null,
+    "cycle_cap_in_search_state": false,
     "time_limit_ms": null,
     "matches": 60,
     "swapped_seats": true,
-    "repeat_penalty": 0,
-    "modes": [
-      "minimax",
-      "alphabeta",
-      "heuristic_minimax",
-      "heuristic_alphabeta"
-    ]
+    "unfinished_matches": 8,
+    "simultaneous_destruction_draws": 8
   },
-  "terminal_control_matches": {
-    "scenario_names": [
-      "default",
-      "open",
-      "walls",
-      "defense",
-      "bullet"
-    ],
-    "depth": 3,
-    "max_cycles": 60,
-    "time_limit_ms": null,
-    "matches": 60,
-    "swapped_seats": true,
-    "repeat_penalty": 0,
-    "modes": [
-      "terminal_minimax",
-      "terminal_alphabeta",
-      "heuristic_minimax",
-      "heuristic_alphabeta"
-    ]
-  },
-  "fixed_opponent_matches": {
-    "scenario_names": [
-      "default",
-      "walls",
-      "original_20"
-    ],
-    "depth": 3,
-    "max_cycles": 60,
-    "time_limit_ms": null,
-    "opponent": "external_greedy.GreedyAgent",
-    "modes": [
-      "minimax",
-      "alphabeta",
-      "heuristic_minimax",
-      "heuristic_alphabeta",
-      "terminal_minimax",
-      "terminal_alphabeta"
-    ],
-    "matches": 36,
-    "swapped_seats": true,
-    "repeat_penalty": 0
-  },
+  "turn_model": "P0 action, visible to P1; P1 action; then advance bullets up to 3 cells with per-cell collision checks.",
+  "termination_model": "Destruction only. Environment caps stop experiments with unfinished status, never create terminal states or draws.",
+  "evaluator_cache_policy": "Cold at every snapshot measurement. Agents reset at each match; geometric heuristic cache reused only within a match.",
   "overtime_definition": "external wall time > 1.1 * time_limit_ms; cooperative soft deadline",
-  "notes": "Sequential measurements. Host timing samples, not macOS Intel i5 grading measurements. BASIC is a simple heuristic; terminal_* controls are the no-heuristic baseline. All datasets remeasured for this design."
+  "notes": "Measured sequentially on this host, not the macOS 13.7.8 Intel i5 grading machine. Four required modes only; obsolete BASIC/control datasets removed."
 }

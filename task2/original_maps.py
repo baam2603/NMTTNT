@@ -1,8 +1,3 @@
-"""Convert bundled 26x26 Battle City levels into the existing 13x13 AI format.
-
-The search and game engine are not extended: water becomes steel, grass and ice
-become empty. Mixed 2x2 blocks use steel > brick > empty. Source files are read-only.
-"""
 import argparse
 import hashlib
 import json

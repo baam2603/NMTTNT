@@ -1,8 +1,3 @@
-"""Minimax and Alpha-Beta, each with terminal-only or heuristic evaluation.
-
-A depth unit is one player's action. Search never invents a game-ending cycle cap.
-PV recording is for the UI and is disabled in experiments.
-"""
 from abc import ABC, abstractmethod
 from math import isfinite
 from time import perf_counter
@@ -139,7 +134,6 @@ class SearchAlgorithm(ABC):
                 depths = [depth] if time_limit_ms is None else range(1, depth + 1)
                 for d in depths:
                     candidate, value, candidate_rows, candidate_pv = self._search_root(state, d, me)
-                    # Commit diagnostics only for completed iterations.
                     action, score, rows, reached, pv = candidate, value, candidate_rows, d, candidate_pv
                     self._root_order = [action] + [a for a in self._root_order if a != action]
             except SearchTimeout:
@@ -221,5 +215,4 @@ def build_search(mode, evaluator=None):
 
 def choose_action(state, depth=4, mode='heuristic_alphabeta', time_limit_ms=None,
                   evaluator=None, track_pv=True):
-    # A fresh engine/evaluator for every independent measurement.
     return build_search(mode, evaluator).search(state, depth, time_limit_ms, track_pv)

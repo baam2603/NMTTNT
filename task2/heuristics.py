@@ -1,4 +1,3 @@
-"""Zero-sum leaf evaluations. Distances and bullet forecasts are estimates."""
 import heapq
 from abc import ABC, abstractmethod
 from math import ceil
@@ -10,7 +9,6 @@ W = {"base_hp": 100, "tank_hp": 80, "path": 10, "shoot": 30, "bullet": 60}
 
 
 def bounded(score):
-    # A non-terminal estimate must never outrank a terminal win/loss.
     return max(-WIN + 100, min(WIN - 100, score))
 
 
@@ -26,7 +24,6 @@ class Evaluator(ABC):
 
 
 class TerminalEvaluator(Evaluator):
-    """No heuristic: terminal win/loss/draw utility; non-terminal cutoff is 0."""
     name = "terminal_only"
 
     def evaluate(self, state, me):
@@ -53,7 +50,6 @@ class SimpleEvaluator(TerminalEvaluator):
 
 
 class HeuristicEvaluator(SimpleEvaluator):
-    """Material + orientation-aware firing routes + aim + stationary bullet risk."""
     name = "heuristic"
     CACHE_LIMIT = 512
     FORECAST_CYCLES = 3
@@ -64,14 +60,6 @@ class HeuristicEvaluator(SimpleEvaluator):
         self._dist_cache = {}
 
     def attack_cost_map(self, state, player):
-        """Reverse Dijkstra on (row, col, direction), seeded by firing positions.
-
-        Move into an empty cell costs 1 and changes direction as in the engine.
-        A blocked turn costs 1. Entering brick estimates its HP in FIRE actions,
-        plus a blocked turn if needed, then one move. Shooting rays stop at steel
-        or the friendly base. Moving tanks are ignored here (a static relaxation);
-        exact tactical blocking and damage are handled by search transitions.
-        """
         goal = state.bases[1 - player]
         bases = frozenset((b.r, b.c) for b in state.bases if b.hp > 0)
         key = (state.rows, state.cols, state.steel, state.wall_key,
@@ -85,7 +73,6 @@ class HeuristicEvaluator(SimpleEvaluator):
                 distances[node] = cost
                 heapq.heappush(queue, (cost, node))
 
-        # Each seed already faces the target. Fire + flight + intervening brick HP.
         for outward, (dr, dc) in enumerate(HUONG):
             row, col, steps, brick_hp = goal.r, goal.c, 0, 0
             while True:
@@ -108,8 +95,7 @@ class HeuristicEvaluator(SimpleEvaluator):
                 for old_direction in range(4):
                     turn = int(hp > 0 and old_direction != direction)
                     offer((*previous, old_direction), cost + 1 + hp + turn)
-            # In the real game, changing direction without moving is only possible
-            # when the requested neighbouring cell is blocked (including edges).
+
             ahead = (row + dr, col + dc)
             if (not state.in_bounds(*ahead) or ahead in state.steel
                     or ahead in state.walls or ahead in bases):
@@ -145,7 +131,6 @@ class HeuristicEvaluator(SimpleEvaluator):
         if entity is None or entity[0] == EntityKind.STEEL:
             return 0.0
         if entity[0] == EntityKind.WALL:
-            # A brick hit is useful only if a target lies beyond it on this ray.
             dr, dc = HUONG[tank.d]
             row, col, hp = tank.r + dr * distance, tank.c + dc * distance, 0
             while entity is not None and entity[0] == EntityKind.WALL:
@@ -161,12 +146,6 @@ class HeuristicEvaluator(SimpleEvaluator):
         return score if owner != player else -score
 
     def bullet_risk(self, state):
-        """Discounted damage for each victim if both tanks keep their positions.
-
-        Reuse the actual collision engine on a copy: walls, friendly fire,
-        crossing bullets and simultaneous hits have the same semantics as play.
-        This is a threat estimate, not a claim that tanks cannot dodge or fire.
-        """
         risk = [0.0, 0.0]
         if not state.bullets:
             return risk

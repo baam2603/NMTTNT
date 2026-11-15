@@ -3,6 +3,39 @@
 
 import os, pygame, time, random, uuid, sys
 
+
+def draw_chamfer_panel(surf, rect, fill, border, notch=6, rivets=False, rivet_col=(130, 145, 165)):
+	x, y, w, h = rect
+	n = min(notch, w // 3, h // 3)
+	pts = [
+		(x + n, y),
+		(x + w - n, y),
+		(x + w, y + n),
+		(x + w, y + h - n),
+		(x + w - n, y + h),
+		(x + n, y + h),
+		(x, y + h - n),
+		(x, y + n),
+	]
+	pygame.draw.polygon(surf, fill, pts)
+	pygame.draw.polygon(surf, border, pts, 2)
+	if rivets and w >= 28 and h >= 28:
+		for rx, ry in [(x + n + 2, y + 4), (x + w - n - 4, y + 4),
+					   (x + n + 2, y + h - 6), (x + w - n - 4, y + h - 6)]:
+			pygame.draw.rect(surf, rivet_col, (rx, ry, 2, 2))
+
+
+def draw_hazard_strip(surf, rect, c1=(245, 130, 32), c2=(22, 25, 30), stripe=6):
+	x, y, w, h = rect
+	clip_prev = surf.get_clip()
+	surf.set_clip(rect)
+	pygame.draw.rect(surf, c2, rect)
+	for sx in range(x - h, x + w + h, stripe * 2):
+		pts = [(sx, y + h), (sx + stripe, y + h), (sx + stripe + h, y), (sx + h, y)]
+		pygame.draw.polygon(surf, c1, pts)
+	surf.set_clip(clip_prev)
+
+
 class myRect(pygame.Rect):
 	""" Add type property """
 	def __init__(self, left, top, width, height, type):
@@ -1267,7 +1300,7 @@ class Game():
 		pygame.init()
 
 
-		pygame.display.set_caption("Battle City")
+		pygame.display.set_caption("Battle City // Mech HUD")
 
 		size = width, height = 480, 416
 
@@ -1313,17 +1346,32 @@ class Game():
 		# Original pixel font is retained for legacy gameplay elements.
 		self.font = pygame.font.Font("fonts/prstart.ttf", 16)
 
-		# Classic Battle City palette and bitmap type (presentation only).
+		# Cyber-industrial colors and fonts: presentation only.
 		self.ui = {
-			"bg": (0, 0, 0), "panel": (0, 0, 0), "panel2": (48, 48, 48),
-			"green": (232, 184, 56), "green_dark": (104, 104, 104),
-			"orange": (200, 104, 40), "text": (248, 248, 248),
-			"muted": (168, 168, 168), "red": (208, 64, 40),
+			'bg': (15, 18, 22),
+			'hull': (26, 31, 38),
+			'panel': (34, 41, 50),
+			'panel2': (46, 56, 68),
+			'border': (78, 94, 114),
+			'border_hi': (122, 146, 174),
+			'orange': (245, 130, 32),
+			'orange_dim': (110, 58, 18),
+			'cyan': (64, 196, 232),
+			'cyan_dim': (28, 82, 102),
+			'red': (224, 56, 56),
+			'text': (238, 244, 250),
+			'muted': (132, 148, 168),
+			'grid': (22, 27, 34),
+			'green': (64, 196, 232),
+			'green_dark': (78, 94, 114),
 		}
 		self.ui_font = pygame.font.Font("fonts/prstart.ttf", 12)
 		self.ui_small = pygame.font.Font("fonts/prstart.ttf", 8)
 		self.ui_heading = pygame.font.Font("fonts/prstart.ttf", 16)
 		self.ui_title = pygame.font.Font("fonts/prstart.ttf", 32)
+		self.font_md = pygame.font.Font("fonts/prstart.ttf", 11)
+		self.font_sm = pygame.font.Font("fonts/prstart.ttf", 9)
+		self.font_xs = pygame.font.Font("fonts/prstart.ttf", 7)
 
 		# pre-render game over text
 		self.im_game_over = pygame.Surface((64, 40))
@@ -1628,73 +1676,114 @@ class Game():
 		pygame.display.flip()
 
 	def drawSidebar(self):
-		"""Draw the modern tactical HUD; gameplay values remain unchanged."""
 		global screen, players, enemies
 		c = self.ui
 		x = 416
-		pygame.draw.rect(screen, c["bg"], pygame.Rect(x, 0, 64, 416))
-		pygame.draw.line(screen, c["green_dark"], (x, 0), (x, 416), 2)
-		# Compact section header
-		pygame.draw.rect(screen, c["panel"], (x + 5, 7, 54, 28), border_radius=4)
-		label = self.ui_small.render("TACTICAL", True, c["green"])
-		screen.blit(label, label.get_rect(center=(x + 32, 21)))
-		# Enemy reserve counter, displayed as small orange/green indicators
+
+		# Industrial armor HUD chassis
+		pygame.draw.rect(screen, c["hull"], pygame.Rect(x, 0, 64, 416))
+		pygame.draw.line(screen, c["border_hi"], (x, 0), (x, 416), 2)
+		draw_hazard_strip(screen, (x + 2, 0, 62, 10), c["orange"], c["bg"], stripe=5)
+
+		# Enemy queue chamfered bay
+		draw_chamfer_panel(screen, (x + 5, 16, 54, 174), c["panel"], c["border"], notch=5)
+		hdr = self.font_xs.render("HOSTILE", False, c["orange"])
+		screen.blit(hdr, hdr.get_rect(center=(x + 32, 26)))
+
 		remaining = len(self.level.enemies_left) + len(enemies)
-		count = min(remaining, 40)
-		for n in range(count):
-			col = n % 3
-			row = n // 3
-			px = x + 10 + col * 15
-			py = 45 + row * 10
-			pygame.draw.rect(screen, c["orange"] if n < len(enemies) else c["green_dark"], (px, py, 9, 6), border_radius=1)
-		# Divider and player status
-		pygame.draw.line(screen, c["panel2"], (x + 7, 190), (x + 57, 190), 1)
+		for n in range(min(remaining, 20)):
+			col = n % 2
+			row = n // 2
+			px = x + 15 + col * 18
+			py = 36 + row * 15
+			screen.blit(self.enemy_life_image, (px, py))
+
+		# Player unit status pods
 		for n, player in enumerate(players):
-			py = 202 + n * 42
-			pygame.draw.rect(screen, c["panel"], (x + 6, py, 52, 35), border_radius=4)
-			name = self.ui_small.render("P" + str(n + 1), True, c["orange"] if n == 0 else c["green"])
-			screen.blit(name, (x + 11, py + 4))
-			life = self.ui_font.render(str(max(0, player.lives)), True, c["text"])
-			screen.blit(life, (x + 31, py + 4))
-			for life_i in range(min(max(0, player.lives), 3)):
-				pygame.draw.rect(screen, c["green"], (x + 11 + life_i * 10, py + 22, 7, 5), border_radius=1)
-		# Stage block
-		pygame.draw.rect(screen, c["panel2"], (x + 6, 294, 52, 52), border_radius=5)
-		flag = self.ui_small.render("STAGE", True, c["muted"])
-		screen.blit(flag, flag.get_rect(center=(x + 32, 308)))
-		stage = self.ui_heading.render(str(self.stage), True, c["orange"])
-		screen.blit(stage, stage.get_rect(center=(x + 32, 329)))
-		# Small control hint at the bottom
-		hint = self.ui_small.render("M: SOUND", True, c["muted"])
-		screen.blit(hint, hint.get_rect(center=(x + 32, 385)))
+			py = 198 + n * 56
+			accent = c["cyan"] if n == 0 else c["orange"]
+			draw_chamfer_panel(screen, (x + 5, py, 54, 50), c["panel"], accent, notch=5)
+			lbl = self.font_xs.render("U" + str(n + 1), False, accent)
+			screen.blit(lbl, (x + 11, py + 7))
+			lives_txt = self.font_sm.render(str(max(0, player.lives)), False, c["text"])
+			screen.blit(lives_txt, (x + 38, py + 6))
+
+			# Segmented armor pips for lives
+			for seg in range(3):
+				sx = x + 11 + seg * 14
+				sy = py + 24
+				pygame.draw.rect(screen, accent if seg < player.lives else c["bg"], (sx, sy, 11, 7))
+				pygame.draw.rect(screen, c["border"], (sx, sy, 11, 7), 1)
+
+			screen.blit(self.player_life_image, (x + 25, py + 34))
+
+		# Sector / Stage pod
+		draw_chamfer_panel(screen, (x + 5, 316, 54, 78), c["panel2"], c["border_hi"], notch=6)
+		screen.blit(self.flag_image, (x + 16, 323))
+		st_lbl = self.font_xs.render("SEC", False, c["muted"])
+		screen.blit(st_lbl, st_lbl.get_rect(center=(x + 32, 362)))
+		stage_txt = self.font_md.render(str(self.stage).zfill(2), False, c["orange"])
+		screen.blit(stage_txt, stage_txt.get_rect(center=(x + 32, 378)))
+
+		draw_hazard_strip(screen, (x + 2, 404, 62, 12), c["orange"], c["bg"], stripe=5)
 	def drawIntroScreen(self, put_on_surface = True):
-		"""Classic brick-letter title; keep the existing two game modes."""
-		global screen, sprites
-		screen.fill((0, 0, 0))
-		white = (248, 248, 248)
-		def centered(text, font, y, color=white):
-			image = font.render(text, False, color)
-			screen.blit(image, image.get_rect(center=(240, y)))
-		centered("HI- " + str(self.loadHiscore()), self.ui_heading, 43)
-		large = pygame.font.Font("fonts/prstart.ttf", 56)
-		brick = sprites.subsurface((96, 128, 16, 16))
-		for title, y in (("BATTLE", 91), ("CITY", 163)):
-			mask = large.render(title, False, white).convert_alpha()
-			letters = pygame.Surface(mask.get_size(), pygame.SRCALPHA)
-			for by in range(0, mask.get_height(), 16):
-				for bx in range(0, mask.get_width(), 16):
-					letters.blit(brick, (bx, by))
-			letters.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-			screen.blit(letters, letters.get_rect(midtop=(240, y)))
-		for value, title, hint, y in ((1, "1 PLAYER", "KEYBOARD VS 4 NPCS", 264),
-									 (2, "AI BATTLE", "2 SEARCH AGENTS", 308)):
-			label = self.ui_heading.render(title, False, white)
-			screen.blit(label, (157, y))
-			screen.blit(self.ui_small.render(hint, False, (168, 168, 168)), (157, y + 21))
-			if self.nr_of_players == value:
-				screen.blit(self.player_image, (117, y - 2))
-		centered("BATTLE CITY / AI EDITION", self.ui_small, 372)
-		centered("UP/DOWN SELECT   ENTER START   Q QUIT", self.ui_small, 397)
+		global screen
+		c = self.ui
+		screen.fill(c["bg"])
+
+		# Steel plate background lines
+		for gx in range(0, 480, 32):
+			pygame.draw.line(screen, c["grid"], (gx, 0), (gx, 416), 1)
+		for gy in range(0, 416, 32):
+			pygame.draw.line(screen, c["grid"], (0, gy), (480, gy), 1)
+
+		draw_chamfer_panel(screen, (12, 10, 456, 396), c["hull"], c["border_hi"], notch=12, rivets=True)
+		draw_hazard_strip(screen, (26, 20, 428, 12), c["orange"], c["bg"], stripe=7)
+
+		hiscore = self.loadHiscore()
+		p1_score = players[0].score if len(players) > 0 else 0
+		top_bar = self.font_xs.render(
+			"UNIT-01:" + str(p1_score).zfill(6) + "   TOP-REC:" + str(hiscore).zfill(6),
+			False,
+			c["cyan"],
+		)
+		screen.blit(top_bar, top_bar.get_rect(center=(240, 43)))
+
+		self.writeInBricks("battle", [65, 58])
+		self.writeInBricks("city", [129, 126])
+
+		options = [
+			(1, "01 // SOLO SORTIE", "KEYBOARD VS 4 NPCS"),
+			(2, "02 // AI WARGAME", "TWO SEARCH AGENTS"),
+		]
+
+		for idx, (number, label, hint) in enumerate(options):
+			y = 220 + idx * 56
+			selected = (self.nr_of_players == number)
+			box = (66, y, 348, 44)
+			draw_chamfer_panel(
+				screen,
+				box,
+				c["panel2"] if selected else c["panel"],
+				c["orange"] if selected else c["border"],
+				notch=6,
+			)
+			if selected:
+				pygame.draw.rect(screen, c["orange"], (72, y + 7, 4, 20))
+				screen.blit(self.player_image, (84, y + 4))
+
+			color = c["text"] if selected else c["muted"]
+			txt = self.font_sm.render(label, False, color)
+			screen.blit(txt, (124, y + 9))
+			screen.blit(self.font_xs.render(hint, False, c["muted"]), (124, y + 27))
+
+		hint1 = self.font_xs.render("UP/DN: SELECT   ENTER: DEPLOY", False, c["muted"])
+		screen.blit(hint1, hint1.get_rect(center=(240, 352)))
+		hint2 = self.font_xs.render("Q: EXIT   /   BATTLE CITY AI", False, c["border_hi"])
+		screen.blit(hint2, hint2.get_rect(center=(240, 368)))
+
+		draw_hazard_strip(screen, (26, 384, 428, 12), c["orange"], c["bg"], stripe=7)
+
 		if put_on_surface:
 			pygame.display.flip()
 

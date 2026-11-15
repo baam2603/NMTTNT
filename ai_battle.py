@@ -297,8 +297,8 @@ class Match(object):
 #  Giao dien PyGame
 # --------------------------------------------------------------------------- #
 class AIBattle(object):
-    BOARD_X, BOARD_Y, BOARD_SIZE = 0, 0, 416
-    PANEL_X = 416
+    BOARD_X, BOARD_Y, BOARD_SIZE = 10, 38, 336
+    PANEL_X = 352
     SPEEDS = [1600, 1000, 650, 360, 180, 90]  # visual ms per 3-cell bullet phase
     EXPLOSION_MS = 220
 
@@ -313,11 +313,11 @@ class AIBattle(object):
         self.clock = ui_game.clock
         self.c = ui_game.ui
         pixel = str(HERE / "fonts" / "prstart.ttf")
-        self.f_text = pygame.font.Font(pixel, 9)
+        self.f_text = pygame.font.Font(pixel, 8)
         self.f_small = pygame.font.Font(pixel, 7)
-        self.f_head = pygame.font.Font(pixel, 16)
-        self.f_title = pygame.font.Font(pixel, 28)
-        self.colors = [(232, 184, 56), (224, 224, 224)] + ([(224, 224, 224)] * 3 if human_mode else [])  # P0 cyan, P1 hong (giong tanks.py)
+        self.f_head = pygame.font.Font(pixel, 10)
+        self.f_title = pygame.font.Font(pixel, 13)
+        self.colors = [self.c["cyan"], self.c["orange"]] + ([self.c["orange"]] * 3 if human_mode else [])
 
         self.backend = None
         self.backend_error = None
@@ -343,6 +343,61 @@ class AIBattle(object):
         from presentation import BulletPlayback
         self.playback = BulletPlayback(self.backend.game) if self.backend is not None else None
         self._prepare_sprites()
+
+    def _chamfer(self, rect, fill, border, notch=6, width=2, rivets=False):
+        pg = self.pg
+        x, y, w, h = rect
+        n = min(notch, w // 3, h // 3)
+        pts = [
+            (x + n, y),
+            (x + w - n, y),
+            (x + w, y + n),
+            (x + w, y + h - n),
+            (x + w - n, y + h),
+            (x + n, y + h),
+            (x, y + h - n),
+            (x, y + n),
+        ]
+        pg.draw.polygon(self.screen, fill, pts)
+        pg.draw.polygon(self.screen, border, pts, width)
+        if rivets and w >= 28 and h >= 28:
+            rc = self.c["border_hi"]
+            for rx, ry in [(x + n + 2, y + 4), (x + w - n - 4, y + 4),
+                           (x + n + 2, y + h - 6), (x + w - n - 4, y + h - 6)]:
+                pg.draw.rect(self.screen, rc, (rx, ry, 2, 2))
+
+    def _hazard(self, rect, c1=None, c2=None, stripe=6):
+        pg = self.pg
+        if c1 is None:
+            c1 = self.c["orange"]
+        if c2 is None:
+            c2 = self.c["bg"]
+        x, y, w, h = rect
+        clip_prev = self.screen.get_clip()
+        self.screen.set_clip(rect)
+        pg.draw.rect(self.screen, c2, rect)
+        for sx in range(x - h, x + w + h, stripe * 2):
+            pts = [(sx, y + h), (sx + stripe, y + h), (sx + stripe + h, y), (sx + h, y)]
+            pg.draw.polygon(self.screen, c1, pts)
+        self.screen.set_clip(clip_prev)
+
+    def _seg_bar(self, x, y, w, h, value, maxv, color):
+        pg = self.pg
+        pg.draw.rect(self.screen, self.c["bg"], (x, y, w, h))
+        pg.draw.rect(self.screen, self.c["border"], (x, y, w, h), 1)
+        if maxv <= 0:
+            return
+        segs = min(maxv, 12)
+        gap = 2
+        inner_w = w - 4
+        seg_w = max(2, (inner_w - gap * (segs - 1)) // segs)
+        filled = int(round((max(0, min(value, maxv)) / float(maxv)) * segs))
+        for i in range(segs):
+            sx = x + 2 + i * (seg_w + gap)
+            if sx + seg_w > x + w - 2:
+                break
+            col = color if i < filled else self.c["hull"]
+            pg.draw.rect(self.screen, col, (sx, y + 2, seg_w, h - 4))
 
     # ---------------- khoi tao ----------------
     def _load_backend(self):
@@ -569,73 +624,66 @@ class AIBattle(object):
             self.sel_map = (self.sel_map + step) % len(self.backend.maps)
 
     def _draw_setup(self, rows):
-        pg = self.pg
-        c = self.c
-        scr = self.screen
+        pg, c, scr = self.pg, self.c, self.screen
         scr.fill(c["bg"])
-        pg.draw.rect(scr, c["green_dark"], (14, 14, 452, 388), 1, border_radius=0)
-        pg.draw.rect(scr, c["panel"], (26, 25, 428, 52), border_radius=0)
-        pg.draw.rect(scr, c["orange"], (39, 36, 5, 30), border_radius=0)
-        self._text(self.f_head, self.title, c["text"], (55, 31))
-        self._text(self.f_small, "TASK 2 SEARCH AGENTS", c["green"], (440, 45), right=True)
-
-        y = 92
+        for gx in range(0, 480, 32):
+            pg.draw.line(scr, c["grid"], (gx, 0), (gx, 416))
+        for gy in range(0, 416, 32):
+            pg.draw.line(scr, c["grid"], (0, gy), (480, gy))
+        self._chamfer((10, 8, 460, 400), c["hull"], c["border_hi"], notch=10, rivets=True)
+        self._hazard((22, 16, 436, 10))
+        title = "SOLO SORTIE // CONFIG" if self.human_mode else "AI WARGAME // CONFIG"
+        self._text(self.f_title, title, c["text"], (240, 39), center=True)
+        options = self._selected_options()
+        y = 56
         for idx, row in enumerate(rows):
             selected = idx == self.row
-            h = 38
-            pg.draw.rect(scr, c["panel2"] if selected else c["panel"], (34, y, 412, h), border_radius=0)
-            if selected:
-                pg.draw.rect(scr, c["orange"], (34, y, 4, h), border_radius=0)
+            self._chamfer((24, y, 432, 39), c["panel2"] if selected else c["panel"],
+                          c["orange"] if selected else c["border"], notch=6,
+                          width=2 if selected else 1)
             if row in ("P0", "P1"):
-                p = 0 if row == "P0" else 1
-                self._text(self.f_small, "PLAYER %d" % p, self.colors[p], (48, y + 6))
-                name = self._selected_options()[p]["label"]
-                name = self._fit(self.f_text, name, 300)
+                side = 0 if row == "P0" else 1
+                pg.draw.rect(scr, self.colors[side], (30, y + 7, 4, 25))
+                self._text(self.f_small, "UNIT P%d" % side, self.colors[side], (42, y + 6))
+                name = self._fit(self.f_text, options[side]["label"], 340)
                 if not self.human_mode:
-                    name = "<  " + name + "  >"
-                self._text(self.f_text, name, c["text"] if selected else c["muted"], (48, y + 19 - 2))
+                    name = "< " + name + " >"
+                self._text(self.f_text, name, c["text"] if selected else c["muted"], (42, y + 20))
             elif row in ("D0", "D1"):
-                p = 0 if row == "D0" else 1
-                opt = self._selected_options()[p]
-                self._text(self.f_small, "  SEARCH DEPTH", c["muted"], (48, y + 12))
-                if opt["kind"] in ("search", "team"):
-                    val = "<  %d  >" % self.depth[p]
-                    col = c["text"] if selected else c["muted"]
-                else:
-                    val = "-"
-                    col = c["muted"]
-                self._text(self.f_text, val, col, (430, y + 10), right=True)
+                side = 0 if row == "D0" else 1
+                self._text(self.f_small, "SEARCH DEPTH P%d" % side, c["muted"], (42, y + 14))
+                searchable = options[side]["kind"] in ("search", "team")
+                value = "< %d >" % self.depth[side] if searchable else "N/A"
+                self._text(self.f_text, value, self.colors[side] if selected and searchable else c["muted"],
+                           (438, y + 13), right=True)
             elif row == "MAP":
-                self._text(self.f_small, "MAP", c["green"], (48, y + 6))
-                self._text(self.f_text, "<  " + self.backend.maps[self.sel_map].upper() + "  >",
-                           c["text"] if selected else c["muted"], (48, y + 19 - 2))
+                self._text(self.f_small, "COMBAT SECTOR", c["cyan"], (42, y + 6))
+                name = self.backend.maps[self.sel_map].upper()
+                self._text(self.f_text, "< " + self._fit(self.f_text, name, 350) + " >",
+                           c["text"] if selected else c["muted"], (42, y + 20))
             else:
-                label = self.f_head.render("START MATCH", True, c["orange"] if selected else c["muted"])
-                scr.blit(label, label.get_rect(center=(240, y + h // 2)))
-            y += h + 6
-        if rows[self.row] == "MAP" and not self.setup_msg:
+                self._text(self.f_head, "DEPLOY UNITS", c["orange"] if selected else c["text"],
+                           (240, y + 19), center=True)
+            y += 46
+        hint = ""
+        if rows[self.row] == "MAP":
             hint = "PGUP/PGDN: 5 MAPS   HOME/END: FIRST/LAST"
             if not self.human_mode:
                 hint = "O: ORIGINALS   PGUP/PGDN: 5 MAPS   HOME/END"
-            self._text(self.f_small, hint, c["muted"], (240,358), center=True)
-        if rows[self.row] in ("P0", "P1") and not self.setup_msg and not self.human_mode:
-            option = self._selected_options()[0 if rows[self.row] == "P0" else 1]
-            mode = option.get("mode")
-            evaluator = (self.backend.search.MODES[mode][1].name
-                         if mode in self.backend.search.MODES else "custom")
-            hint = {"heuristic": "HEURISTIC: HP + FIRING ROUTE + AIM + BULLETS",
-                    "terminal_only": "NO HEURISTIC / NONTERMINAL CUTOFF = 0"}.get(
-                        evaluator, "EXTERNAL AGENT")
-            self._text(self.f_small, hint, c["muted"], (240, 358), center=True)
-        if self.setup_msg:
-            msg = self._fit(self.f_small, self.setup_msg, 420)
-            self._text(self.f_small, msg, c["red"], (240, 358), center=True)
-        self._text(self.f_small, "UP/DOWN SELECT   LEFT/RIGHT CHANGE   ENTER START   ESC BACK",
-                   c["muted"], (240, 374), center=True)
+        elif rows[self.row] in ("P0", "P1") and not self.human_mode:
+            side = 0 if rows[self.row] == "P0" else 1
+            mode = options[side].get("mode")
+            evaluator = self.backend.search.MODES[mode][1].name if mode in self.backend.search.MODES else "custom"
+            hint = {"terminal_only": "NO HEURISTIC: NONTERMINAL CUTOFF = 0",
+                    "heuristic": "HP + FIRING ROUTE + AIM + BULLETS"}.get(evaluator, "EXTERNAL AGENT")
+        self._text(self.f_small, self._fit(self.f_small, self.setup_msg or hint, 420),
+                   c["red"] if self.setup_msg else c["muted"], (240, 346), center=True)
+        self._text(self.f_small, "ARROWS: TUNE   ENTER: DEPLOY   ESC: HANGAR", c["muted"], (240, 365), center=True)
         budget = self.budgets[self.budget_index]
-        budget_label = "FULL DEPTH" if budget is None else "%d ms / MOVE" % budget
-        self._text(self.f_small, "B: " + budget_label + "   F5 IMPORT   TAB IN MATCH",
-                   c["muted"], (240, 390), center=True)
+        budget_label = "FULL DEPTH" if budget is None else "%d MS/MOVE" % budget
+        self._text(self.f_small, "B: " + budget_label + "   F5: IMPORT   TAB: INFO", c["border_hi"],
+                   (240, 380), center=True)
+        self._hazard((22, 392, 436, 8))
         pg.display.flip()
 
     # ---------------- bat dau van dau ----------------
@@ -746,56 +794,83 @@ class AIBattle(object):
         return self.playback.positions(now)
 
     def _draw_play(self, now):
-        pg, scr, m = self.pg, self.screen, self.match
+        pg, scr, c, m = self.pg, self.screen, self.c, self.match
         s = self.playback.state_at(now)
-        origin = self._board_origin(s)
-        cell = self.cell
-        scr.fill((128, 128, 128))
-        board = pg.Rect(origin[0], origin[1], cell * s.cols, cell * s.rows)
-        pg.draw.rect(scr, (0, 0, 0), board)
+        origin, cell = self._board_origin(s), self.cell
+        scr.fill(c["bg"])
+        pg.draw.rect(scr, c["hull"], (0, 0, 480, 28))
+        pg.draw.line(scr, c["border_hi"], (0, 27), (480, 27), 2)
+        self._hazard((0, 0, 64, 26), stripe=5)
+        self._text(self.f_small, "TACTICAL HUD", c["orange"], (72, 10))
+        self._text(self.f_small, "CYCLE %03d" % m.state.cycle, c["text"], (268, 10), center=True)
+        self._text(self.f_small, self._fit(self.f_small, self.backend.maps[self.sel_map].upper(), 112),
+                   c["cyan"], (472, 10), right=True)
+        bw, bh = cell * s.cols, cell * s.rows
+        self._chamfer((origin[0] - 6, origin[1] - 6, bw + 12, bh + 12),
+                      c["hull"], c["border_hi"], notch=8, rivets=True)
+        board = pg.Rect(origin[0], origin[1], bw, bh)
+        pg.draw.rect(scr, (12, 15, 19), board)
+        for col in range(s.cols + 1):
+            x = origin[0] + col * cell
+            pg.draw.line(scr, c["grid"], (x, origin[1]), (x, origin[1] + bh))
+        for row in range(s.rows + 1):
+            y = origin[1] + row * cell
+            pg.draw.line(scr, c["grid"], (origin[0], y), (origin[0] + bw, y))
+        pg.draw.rect(scr, c["border"], board, 1)
         for r, col in s.steel:
             scr.blit(self.img_steel, self._cell_xy(origin, r, col))
         for (r, col), hp in s.walls.items():
             x, y = self._cell_xy(origin, r, col)
             scr.blit(self.img_brick, (x, y))
             if hp < self.backend.game.WALL_HP:
-                pg.draw.rect(scr, (0, 0, 0), (x, y+cell//2, cell//2, cell-cell//2))
-            if hp == 1:
-                pg.draw.rect(scr, (0, 0, 0), (x+cell//2, y, cell-cell//2, cell//2))
-        for base in s.bases:
-            scr.blit(self.img_castle if base.hp > 0 else self.img_castle_dead,
-                     self._cell_xy(origin, base.r, base.c))
-        for p, tank in enumerate(s.tanks):
-            if tank.hp <= 0: continue
+                shade = pg.Surface((cell, cell), pg.SRCALPHA)
+                shade.fill((0, 0, 0, 70 * (self.backend.game.WALL_HP - hp)))
+                scr.blit(shade, (x, y))
+            if cell >= 22:
+                self._text(self.f_small, str(hp), c["text"], (x + cell - 8, y + 2))
+        for side, base in enumerate(s.bases):
+            x, y = self._cell_xy(origin, base.r, base.c)
+            scr.blit(self.img_castle if base.hp > 0 else self.img_castle_dead, (x, y))
+            if base.hp > 0:
+                pg.draw.rect(scr, self.colors[side], (x, y, cell, cell), 1)
+        for side, tank in enumerate(s.tanks):
+            if tank.hp <= 0:
+                continue
             x, y = self._cell_xy(origin, tank.r, tank.c)
-            scr.blit(self.img_tank[p][tank.d], (x, y))
-            if self.human_mode and p:
-                self._text(self.f_small, str(p), (255,255,255), (x+2,y+cell-9))
+            scr.blit(self.img_tank[side][tank.d], (x, y))
+            if self.human_mode and side:
+                self._text(self.f_small, str(side), self.colors[side], (x + 2, y + cell - 9))
+            if m.mover == side and m.last_action == self.backend.game.Action.FIRE and now - self.last_move_ms < 130:
+                dr, dc = self.backend.game.HUONG[tank.d]
+                muzzle = (x + cell // 2 + dc * (cell // 2 + 2), y + cell // 2 + dr * (cell // 2 + 2))
+                pg.draw.circle(scr, (255, 220, 110), muzzle, max(3, cell // 6))
+                pg.draw.circle(scr, self.colors[side], muzzle, max(5, cell // 4), 1)
         if self.show_vectors:
             self._draw_vectors(origin)
         old_clip = scr.get_clip()
         scr.set_clip(board)
         for r, col, direction in self._bullet_positions(now):
-            img = self.img_bullet[direction]
-            center = (round(origin[0]+(col+.5)*cell), round(origin[1]+(r+.5)*cell))
-            scr.blit(img, img.get_rect(center=center))
+            image = self.img_bullet[direction]
+            center = (round(origin[0] + (col + .5) * cell), round(origin[1] + (r + .5) * cell))
+            scr.blit(image, image.get_rect(center=center))
         for event in self.playback.effects:
-            age = now-event['at']
-            if not 0 <= age < self.EXPLOSION_MS: continue
+            age = now - event['at']
+            if not 0 <= age < self.EXPLOSION_MS:
+                continue
             images = self.img_boom if event['large'] else self.img_spark
-            image = images[min(len(images)-1, int(age/self.EXPLOSION_MS*len(images)))]
+            image = images[min(len(images) - 1, int(age / self.EXPLOSION_MS * len(images)))]
             r, col = event['point']
-            center = (round(origin[0]+(col+.5)*cell), round(origin[1]+(r+.5)*cell))
+            center = (round(origin[0] + (col + .5) * cell), round(origin[1] + (r + .5) * cell))
             scr.blit(image, image.get_rect(center=center))
         scr.set_clip(old_clip)
         if (m.is_over() and not self.playback.busy(now)) or m.error:
             title, reason = ("AI ERROR", m.error) if m.error else m.result_text()
-            box = pg.Rect(45, 160, 326, 90)
-            pg.draw.rect(scr, (0,0,0), box)
-            pg.draw.rect(scr, (224,224,224), box, 2)
-            self._text(self.f_head, title, (224,104,40), (208,183), center=True)
-            self._text(self.f_small, self._fit(self.f_small, reason,300), (255,255,255), (208,211), center=True)
-            self._text(self.f_small, "ENTER REMATCH  /  ESC SETUP", (255,255,255), (208,233), center=True)
+            bx, by = origin[0] + (bw - 296) // 2, origin[1] + (bh - 98) // 2
+            self._chamfer((bx, by, 296, 98), c["hull"], c["orange"], notch=9, rivets=True)
+            self._hazard((bx + 10, by + 6, 276, 7), stripe=5)
+            self._text(self.f_title, self._fit(self.f_title, title, 276), c["text"], (bx + 148, by + 32), center=True)
+            self._text(self.f_small, self._fit(self.f_small, reason, 276), c["muted"], (bx + 148, by + 58), center=True)
+            self._text(self.f_small, "ENTER: REMATCH   ESC: CONFIG", c["orange"], (bx + 148, by + 78), center=True)
         self._draw_panel(now)
         self._draw_footer()
         if self.inspect_search and not self.human_mode:
@@ -803,46 +878,49 @@ class AIBattle(object):
         pg.display.flip()
 
     def _draw_panel(self, now=None):
-        pg, scr, m = self.pg, self.screen, self.match
-        now = pg.time.get_ticks() if now is None else now
+        c, m, game = self.c, self.match, self.backend.game
+        now = self.pg.time.get_ticks() if now is None else now
         s = self.playback.state_at(now)
-        x0 = self.PANEL_X
-        pg.draw.rect(scr,(168,168,168),(x0,0,64,416))
-        black=(16,16,16)
-        labels={"minimax":"MM", "alphabeta":"AB", "heuristic_minimax":"H-MM", "heuristic_alphabeta":"H-AB"}
-        for p in (0,1):
-            y=8+p*150
-            active=not m.is_over() and (m.state.to_move==p or self.human_mode and p==1 and m.state.to_move>0)
-            icon=pg.transform.scale(self.raw['tank' if p==0 else 'tank1'],(16,16))
-            scr.blit(icon,(x0+4,y))
-            self._text(self.f_text, '%dP'% (p+1), black,(x0+25,y+3))
-            if active:pg.draw.rect(scr,black,(x0+2,y+19,58,2))
-            option=m.options[p]
-            name='4 NPCS' if self.human_mode and p==1 else labels.get(option.get('mode'),option['short'])
-            self._text(self.f_small,self._fit(self.f_small,name,56),black,(x0+4,y+25))
-            hp=sum(t.hp for t in s.tanks[1:]) if self.human_mode and p==1 else s.tanks[p].hp
-            max_hp=self.backend.game.TANK_HP*(4 if self.human_mode and p==1 else 1)
-            self._text(self.f_small,'TANK',black,(x0+4,y+40))
-            self._text(self.f_small,'%d/%d'%(hp,max_hp),black,(x0+4,y+51))
-            self._text(self.f_small,'BASE',black,(x0+4,y+66))
-            self._text(self.f_small,'%d/%d'%(s.bases[p].hp,self.backend.game.BASE_HP),black,(x0+4,y+77))
-            info=m.last[p]
-            if self.human_mode and p==1:
-                lines=['%d: %d HP'%(i,s.tanks[i].hp) for i in range(1,5)]
+        x0, width = self.PANEL_X, 480 - self.PANEL_X - 6
+        abbreviations = {"minimax": "MM", "alphabeta": "AB", "heuristic_minimax": "H-MM", "heuristic_alphabeta": "H-AB"}
+        for side in (0, 1):
+            y0, accent = 32 + side * 174, self.colors[side]
+            team = self.human_mode and side == 1
+            active = not m.is_over() and (m.state.to_move == side or team and m.state.to_move > 0)
+            self._chamfer((x0, y0, width, 168), c["panel2"] if active else c["panel"],
+                          accent if active else c["border"], notch=7, width=2 if active else 1, rivets=True)
+            self._text(self.f_small, "P%d" % side, accent, (x0 + 9, y0 + 8))
+            option = m.options[side]
+            name = "4 NPCS" if team else abbreviations.get(option.get("mode"), option['short'])
+            if option['kind'] == 'search':
+                name += " D%d" % m.depths[side]
+            self._text(self.f_small, self._fit(self.f_small, name, width - 36), c['text'], (x0 + 28, y0 + 8))
+            hp = sum(t.hp for t in s.tanks[1:]) if team else s.tanks[side].hp
+            maximum = game.TANK_HP * (4 if team else 1)
+            self._text(self.f_small, "TANK HP", c['muted'], (x0 + 9, y0 + 25))
+            self._text(self.f_small, "%d/%d" % (hp, maximum), c['text'], (x0 + width - 9, y0 + 25), right=True)
+            self._seg_bar(x0 + 9, y0 + 36, width - 18, 9, hp, maximum, accent)
+            base = s.bases[side]
+            self._text(self.f_small, "BASE HP", c['muted'], (x0 + 9, y0 + 50))
+            self._text(self.f_small, "%d/%d" % (base.hp, game.BASE_HP), c['text'], (x0 + width - 9, y0 + 50), right=True)
+            self._seg_bar(x0 + 9, y0 + 61, width - 18, 9, base.hp, game.BASE_HP, accent)
+            info = m.last[side]
+            if team:
+                lines = [("N%d" % i, "%dHP %s" % (s.tanks[i].hp, abbreviations.get(m.options[i].get('mode'), 'AI')))
+                         for i in range(1, 5)]
             else:
-                lines=[info.get('action','READY').replace('MOVE_',''),
-                       'D%s/%s'%(info.get('depth_reached','-'),m.depths[p])]
-                if 'time_ms' in info:lines.append('%.1fMS'%info['time_ms'])
-                if 'nodes' in info:lines.append('N %d'%info['nodes'])
-            for i,line in enumerate(lines):
-                self._text(self.f_small,self._fit(self.f_small,line,56),black,(x0+4,y+94+i*12))
-        pg.draw.line(scr,(80,80,80),(x0+4,306),(477,306))
-        self._text(self.f_small,'MAP',black,(x0+4,314))
-        self._text(self.f_small,self._fit(self.f_small,self.backend.maps[self.sel_map].upper().replace("ORIGINAL_", "LV"),56),black,(x0+4,326))
-        self._text(self.f_small,'R %03d'%m.state.cycle,black,(x0+4,344))
-        self._text(self.f_small,'SPD %d'%(self.speed+1),black,(x0+4,358))
-        status='ERROR' if m.error else 'OVER' if m.is_over() else 'PAUSE' if self.paused else 'THINK' if m.thinking else 'READY'
-        self._text(self.f_small,status,black,(x0+4,374))
+                lines = [("ACT", info.get('action', 'READY').replace('MOVE_', '')),
+                         ("MS", "%.1f" % info['time_ms'] if 'time_ms' in info else '-'),
+                         ("NOD", str(info.get('nodes', '-'))),
+                         ("DEP", "%s/%s" % (info.get('depth_reached', '-'), m.depths[side]))]
+            for index, (label, value) in enumerate(lines):
+                y = y0 + 78 + index * 16
+                self._text(self.f_small, label, c['muted'], (x0 + 9, y))
+                self._text(self.f_small, self._fit(self.f_small, value, width - 46), c['text'],
+                           (x0 + width - 9, y), right=True)
+            if active:
+                status = ">> KEYBOARD" if m.current_is_human() else ">> COMPUTING" if m.thinking else ">> ACTIVE"
+                self._text(self.f_small, status, accent, (x0 + 9, y0 + 150))
 
     def _draw_vectors(self, origin):
         """Current facing rays and previous movement; these are not future actions."""
@@ -880,8 +958,7 @@ class AIBattle(object):
         pg, c, m = self.pg, self.c, self.match
         mover = m.mover if m.mover is not None else m.state.to_move
         info = m.last[mover]
-        pg.draw.rect(self.screen, c["panel"], (18, 35, 444, 344), border_radius=0)
-        pg.draw.rect(self.screen, self.colors[mover], (18, 35, 444, 344), 2, border_radius=0)
+        self._chamfer((18, 35, 444, 344), c["hull"], self.colors[mover], notch=9, rivets=True)
         self._text(self.f_text, "SEARCH: P%d MAX / P%d MIN" % (mover, 1-mover), c["text"], (32, 46))
         self._text(self.f_small, "TAB CLOSE    P PAUSE    N NEXT ACTION", c["orange"], (32, 68))
         if not info:
@@ -921,6 +998,20 @@ class AIBattle(object):
         self._text(self.f_small, note, c["orange"] if m.is_over() else c["muted"], (32, 355))
 
     def _draw_footer(self):
-        black=(16,16,16)
-        self._text(self.f_small,'TAB INFO',black,(self.PANEL_X+4,391))
-        self._text(self.f_small,'P N +/-',black,(self.PANEL_X+4,403))
+        pg, c, scr, m = self.pg, self.c, self.screen, self.match
+        pg.draw.rect(scr, c['hull'], (0, 384, 480, 32))
+        pg.draw.line(scr, c['border_hi'], (0, 384), (480, 384), 2)
+        self._hazard((416, 386, 64, 30), stripe=5)
+        if m.error:
+            status, color = "ERR: " + m.error, c['red']
+        elif m.is_over():
+            status, color = "MATCH OVER", c['orange']
+        elif self.paused:
+            status, color = "PAUSED (P:RUN N:STEP)", c['orange']
+        else:
+            status, color = "SYSTEM ONLINE", c['cyan']
+        status += " // SPD:%d/%d // TAB:INFO" % (self.speed + 1, len(self.SPEEDS))
+        self._text(self.f_small, self._fit(self.f_small, status, 404), color, (8, 390))
+        hint = ("ARROWS:MOVE  SPACE:FIRE  X:STAY  ESC:CONFIG" if m.current_is_human()
+                else "P:PAUSE N:STEP +/-:SPD R:RESET V:AIM ESC:CONFIG")
+        self._text(self.f_small, self._fit(self.f_small, hint, 404), c['muted'], (8, 403))

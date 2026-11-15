@@ -7,15 +7,11 @@ from pathlib import Path
 from statistics import mean, median
 
 from game import Bullet, GameState
-from search import MODES, choose_action
+from search import MODES, PRIMARY_MODES, MODE_PAIRS, choose_action
 
 
-MODES_ORDER = (
-    "minimax",
-    "alphabeta",
-    "heuristic_minimax",
-    "heuristic_alphabeta",
-)
+MODES_ORDER = PRIMARY_MODES
+
 def make_map(walls=(), steel=()):
     grid = [[" " for _ in range(9)] for _ in range(9)]
     grid[8][6] = "a"
@@ -113,16 +109,19 @@ def validate_pairs(rows):
         key = (row["scenario"], row["player"], row["depth"], row["repeat"])
         groups[key][row["mode"]] = row
 
+    pairs_checked = 0
     for key, d in groups.items():
-        for plain, ab in (("minimax", "alphabeta"),
-                          ("heuristic_minimax", "heuristic_alphabeta")):
+        for plain, ab in MODE_PAIRS:
+            if plain not in d or ab not in d:
+                continue
+            pairs_checked += 1
             if not isclose(d[plain]["score"], d[ab]["score"],
                            rel_tol=1e-9, abs_tol=1e-8):
                 raise AssertionError(
                     f"Khac diem Minimax/Alpha-Beta tai {key}: "
                     f"{plain}={d[plain]['score']}, {ab}={d[ab]['score']}"
                 )
-    return len(groups)
+    return pairs_checked
 
 
 def summarize(rows):
@@ -187,6 +186,8 @@ def main():
     parser.add_argument("--players", choices=["0", "1", "both"], default="both")
     parser.add_argument("--scenarios", nargs="+",
                         choices=list(build_scenarios()) + ["all"], default=["all"])
+    parser.add_argument("--modes", nargs="+", choices=list(MODES), default=list(PRIMARY_MODES),
+                        help="Default: four basic/advanced modes; terminal_* are explicit controls.")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output", default="benchmark_results.csv")
     parser.add_argument("--summary", default="benchmark_summary.csv")
@@ -205,7 +206,7 @@ def main():
         for player in players:
             for depth in args.depths:
                 for repeat in range(1, args.repeats + 1):
-                    modes = list(MODES_ORDER)
+                    modes = list(dict.fromkeys(args.modes))
                     rng.shuffle(modes)  # Giam sai lech do thu tu chay thuat toan
                     for mode in modes:
                         rows.append(measure_one(cases[scenario], scenario, player,
@@ -217,12 +218,12 @@ def main():
     write_csv(args.output, rows)
     write_csv(args.summary, summary)
     print_summary(summary)
-    print(f"\nPASS: {groups_checked} cap dieu kien (scenario/player/depth/repeat) "
+    print(f"\nPASS: {groups_checked} cap Minimax/Alpha-Beta (cung evaluator/depth) "
           "co diem Minimax = Alpha-Beta.")
     print(f"Da luu: {args.output} ({len(rows)} lan chay)")
     print(f"Da luu: {args.summary} ({len(summary)} dong tong hop)")
     print("Luu y: Evals = so lan goi ham danh gia (leaves + order_evals).")
-    print("MM/AB: no heuristic (terminal-only); H-MM/H-AB: heuristic; timed play reports depth_reached.")
+    print("MM/AB: BASIC; H-MM/H-AB: ADVANCED; terminal_*: NO HEURISTIC controls.")
 
 
 if __name__ == "__main__":

@@ -38,12 +38,16 @@ class Task2Backend(object):
         "alphabeta": "ALPHA-BETA",
         "heuristic_minimax": "H-MINIMAX",
         "heuristic_alphabeta": "H-ALPHABETA",
+        "terminal_minimax": "T-MINIMAX",
+        "terminal_alphabeta": "T-ALPHABETA",
     }
     LONG = {
-        "minimax": "MINIMAX (NO HEURISTIC)",
-        "alphabeta": "ALPHA-BETA (NO HEURISTIC)",
+        "minimax": "MINIMAX (BASIC)",
+        "alphabeta": "ALPHA-BETA (BASIC)",
         "heuristic_minimax": "HEURISTIC MINIMAX",
         "heuristic_alphabeta": "HEURISTIC ALPHA-BETA",
+        "terminal_minimax": "CONTROL: TERMINAL MINIMAX",
+        "terminal_alphabeta": "CONTROL: TERMINAL ALPHA-BETA",
     }
 
     def __init__(self, task2_dir):
@@ -373,8 +377,10 @@ class AIBattle(object):
             0,
         )
 
-        # Hai phía đều dùng thuật toán tìm kiếm.
-        self.sel_agent = [default_index, default_index]
+        # Default duel makes the basic/advanced evaluation comparison visible.
+        basic_index = next((i for i, option in enumerate(self.options)
+                            if option.get("mode") == "alphabeta"), default_index)
+        self.sel_agent = [basic_index, default_index]
 
     def _selected_options(self):
         options = [self.options[self.sel_agent[p]] for p in (0, 1)]
@@ -615,6 +621,16 @@ class AIBattle(object):
             if not self.human_mode:
                 hint = "O: ORIGINALS   PGUP/PGDN: 5 MAPS   HOME/END"
             self._text(self.f_small, hint, c["muted"], (240,358), center=True)
+        if rows[self.row] in ("P0", "P1") and not self.setup_msg and not self.human_mode:
+            option = self._selected_options()[0 if rows[self.row] == "P0" else 1]
+            mode = option.get("mode")
+            evaluator = (self.backend.search.MODES[mode][1].name
+                         if mode in self.backend.search.MODES else "custom")
+            hint = {"basic": "BASIC EVAL: HP + MANHATTAN DISTANCE",
+                    "heuristic": "ADVANCED EVAL: FIRING ROUTE + AIM + BULLETS",
+                    "terminal_only": "CONTROL: NO HEURISTIC / NONTERMINAL = 0"}.get(
+                        evaluator, "EXTERNAL AGENT")
+            self._text(self.f_small, hint, c["muted"], (240, 358), center=True)
         if self.setup_msg:
             msg = self._fit(self.f_small, self.setup_msg, 420)
             self._text(self.f_small, msg, c["red"], (240, 358), center=True)
@@ -797,7 +813,8 @@ class AIBattle(object):
         x0 = self.PANEL_X
         pg.draw.rect(scr,(168,168,168),(x0,0,64,416))
         black=(16,16,16)
-        labels={"minimax":"MM", "alphabeta":"AB", "heuristic_minimax":"H-MM", "heuristic_alphabeta":"H-AB"}
+        labels={"minimax":"MM", "alphabeta":"AB", "heuristic_minimax":"H-MM", "heuristic_alphabeta":"H-AB",
+                "terminal_minimax":"T-MM", "terminal_alphabeta":"T-AB"}
         for p in (0,1):
             y=8+p*150
             active=not m.is_over() and (m.state.to_move==p or self.human_mode and p==1 and m.state.to_move>0)
@@ -875,7 +892,8 @@ class AIBattle(object):
         if not info:
             self._text(self.f_text, "Waiting for the first AI decision...", c["muted"], (32, 110))
             return
-        label = {"heuristic": "HEURISTIC: HP + ROUTE + AIM + BULLETS",
+        label = {"heuristic": "ADVANCED: HP + ROUTE + AIM + BULLETS",
+                 "basic": "BASIC: HP + MANHATTAN DISTANCE",
                  "terminal_only": "NO HEURISTIC: TERMINAL UTILITY ONLY"}.get(
                      info.get("evaluator"), "EXTERNAL / CUSTOM EVALUATOR")
         self._text(self.f_small, label, c["green"], (32, 90))
@@ -903,7 +921,7 @@ class AIBattle(object):
         self._text(self.f_small, "= exact | <= upper bound | view: P%d" % mover,
                    c["muted"], (32, 338))
         note = ("Non-terminal ties may choose FIRE." if info.get("evaluator") == "terminal_only"
-                else "Depth = actions. Heuristic is an estimate.")
+                else "Depth = actions. Leaf score is an estimate.")
         if m.is_over():
             note = "RESULT: " + m.result_text()[0] + "   TAB: RETURN TO BOARD"
         self._text(self.f_small, note, c["orange"] if m.is_over() else c["muted"], (32, 355))

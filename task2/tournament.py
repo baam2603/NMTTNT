@@ -9,7 +9,7 @@ from itertools import combinations
 from collections import defaultdict
 
 from agent import SearchAgent, play_match
-from benchmark import build_scenarios, write_csv
+from benchmark import build_scenarios, write_csv, MODES_ORDER
 from search import MODES
 
 
@@ -30,6 +30,7 @@ class Tournament:
                     winner = result['winner']
                     final = result['final']
                     row = dict(scenario=scenario, mode0=mode0, mode1=mode1,
+                               evaluator0=MODES[mode0][1].name, evaluator1=MODES[mode1][1].name,
                                depth=self.depth, time_limit_ms=self.time_limit_ms,
                                max_cycles=self.max_cycles, winner='draw' if winner is None else winner,
                                reason=result['reason'], cycles=final.cycle,
@@ -67,7 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenarios', nargs='+', choices=list(build_scenarios()),
                         default=['default','open','walls'])
-    parser.add_argument('--modes', nargs='+', choices=list(MODES), default=list(MODES))
+    parser.add_argument('--modes', nargs='+', choices=list(MODES), default=list(MODES_ORDER))
     parser.add_argument('--depth', type=int, default=3)
     parser.add_argument('--max-cycles', type=int, default=40)
     parser.add_argument('--time-limit-ms', type=float, default=None,

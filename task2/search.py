@@ -1,14 +1,14 @@
-"""Four adversarial-search configurations with observable, bounded-depth decisions.
+"""Adversarial search with four primary configurations and terminal-only controls.
 
-Plain modes use terminal utility only and return neutral 0 at non-terminal cutoffs.
-Heuristic modes add material, routing and tactical estimates at those cutoffs.
+Four primary configurations compare basic versus advanced leaf evaluation.
+Two explicit terminal-only controls keep non-terminal cutoff values at neutral 0.
 Equal values use stable action order, never scripted moves.
 """
 from abc import ABC, abstractmethod
 from math import isfinite
 from time import perf_counter
 
-from heuristics import HeuristicEvaluator, TerminalEvaluator
+from heuristics import BasicEvaluator, HeuristicEvaluator, TerminalEvaluator
 
 INF = float('inf')
 
@@ -38,7 +38,7 @@ class SearchTimeout(Exception):
 
 class SearchAlgorithm(ABC):
     def __init__(self, evaluator=None, name=None, repeat_aware=False):
-        self.evaluator = evaluator if evaluator is not None else TerminalEvaluator()
+        self.evaluator = evaluator if evaluator is not None else BasicEvaluator()
         self.name = name or type(self).__name__.lower()
         self.repeat_aware = repeat_aware
         self.stats = _new_stats()
@@ -259,11 +259,19 @@ class AlphaBeta(SearchAlgorithm):
         return best
 
 
+PRIMARY_MODES = ('minimax', 'alphabeta', 'heuristic_minimax', 'heuristic_alphabeta')
+CONTROL_MODES = ('terminal_minimax', 'terminal_alphabeta')
+MODE_PAIRS = (('minimax', 'alphabeta'),
+              ('heuristic_minimax', 'heuristic_alphabeta'),
+              CONTROL_MODES)
+
 MODES = {
-    'minimax': (Minimax, TerminalEvaluator, False),
-    'alphabeta': (AlphaBeta, TerminalEvaluator, False),
+    'minimax': (Minimax, BasicEvaluator, False),
+    'alphabeta': (AlphaBeta, BasicEvaluator, False),
     'heuristic_minimax': (Minimax, HeuristicEvaluator, True),
     'heuristic_alphabeta': (AlphaBeta, HeuristicEvaluator, True),
+    'terminal_minimax': (Minimax, TerminalEvaluator, False),
+    'terminal_alphabeta': (AlphaBeta, TerminalEvaluator, False),
 }
 
 

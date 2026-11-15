@@ -1,63 +1,72 @@
-# Thực nghiệm không heuristic / có heuristic
+# Thực nghiệm đánh giá cơ bản/nâng cao và terminal-only
 
-Các số liệu được đo lại cho profile `terminal_vs_heuristic_v1` trên Python
-3.12.14/Linux x86_64; cấu hình và hash mã nguồn trong `environment.json`.
-Đây không phải máy macOS Intel i5 của đề. Các phép đo chạy tuần tự; thời gian phụ
-thuộc tải máy. Không dùng dữ liệu BASIC trước đây để mô tả cấu hình hiện tại.
+Profile `basic_advanced_terminal_controls_v2`, Python 3.12.14/Linux x86_64; cấu hình
+và hash nguồn trong `environment.json`. Đây không phải macOS Intel i5 của đề.
+Đợt đo chạy tuần tự; thời gian phụ thuộc máy/tải hệ thống, không đại diện mọi máy.
 
-## Bốn cấu hình
+## Chọn đúng nhóm so sánh
 
-- Minimax và Alpha-Beta: `TerminalEvaluator`, không heuristic, trạng thái chưa kết
-  thúc ở ngưỡng cắt nhận 0; terminal thắng/thua/hòa là +10000/−10000/0.
-- Heuristic Minimax và Heuristic Alpha-Beta: cùng `HeuristicEvaluator`, thêm HP,
-  đường tới vị trí bắn, hướng ngắm và đạn. Utility terminal vẫn như hai bản trên.
-- Cùng depth nghĩa là cùng số hành động được nhìn trước. Phạt lặp mặc định 0.
-  Bản không heuristic không được thêm điều khiển di chuyển hoặc điểm khoảng cách.
+- Mặc định CLI chạy bốn mode chính: minimax/alphabeta dùng BasicEvaluator (HP +
+  Manhattan), heuristic_minimax/heuristic_alphabeta dùng đánh giá nâng cao.
+- BASIC cũng là heuristic đơn giản; không gọi nó là “không heuristic”.
+- Đối chứng không/có heuristic đúng nghĩa: chọn terminal_minimax, terminal_alphabeta,
+  heuristic_minimax, heuristic_alphabeta qua --modes hoặc hai CONTROL trên UI.
+- terminal_* chỉ chấm utility thắng/thua/hòa; chưa kết thúc ở ngưỡng cắt nhận 0.
+  Các mode khác có điểm tiến triển. Cả sáu giữ cùng luật, utility terminal và phạt
+  lặp mặc định 0. Không có điều khiển ép di chuyển hoặc ngẫu nhiên để phá hòa.
 
-## Snapshot cùng độ sâu và đối đầu đổi bên
+## Snapshot và đối đầu đổi bên
 
-`search_fixed_depth.csv`: 240 lượt = 5 map × 2 bên × depth 2/4 × 3 lần × 4 cấu hình;
-`search_fixed_depth_summary.csv`: 80 nhóm. Mọi lượt đạt độ sâu yêu cầu; cặp
-Minimax/Alpha-Beta cùng evaluator khớp giá trị. Cột evaluator ghi terminal_only hoặc
-heuristic. Lặp snapshot phục vụ đo thời gian, không tạo các trận độc lập.
+Năm map: DEFAULT, OPEN, WALLS, DEFENSE, BULLET; hai bên; depth 2/4 × 3 lần cho
+snapshot. Mọi lượt đạt độ sâu yêu cầu, từng cặp Minimax/Alpha-Beta khớp giá trị.
 
-`tournament_fixed_depth.csv`: 60 trận = 5 map × 6 cặp × 2 bên; depth 3, tối đa 60
-vòng, không deadline/phạt lặp. File summary tổng hợp thắng/thua/hòa, thời gian,
-nút, đánh giá và độ sâu. Không có agent fault. Năm map là DEFAULT, OPEN, WALLS,
-DEFENSE, BULLET; kết quả và giới hạn diễn giải ở [REPORT.md](../REPORT.md).
+- search_fixed_depth.csv: 240 lượt của bốn mode chính; summary 80 nhóm.
+- search_terminal_control.csv: 120 lượt terminal-only; summary 40 nhóm.
+- tournament_fixed_depth.csv: 60 trận bốn mode chính; có summary.
+- tournament_terminal_control.csv: 60 trận bốn mode đối chứng không/có heuristic;
+  có summary. Hai tournament cùng 5 map × 6 cặp × 2 bên, depth 3, tối đa 60 vòng,
+  không deadline/phạt lặp; không agent fault.
+
+Tái hiện bốn mode chính:
 
 ```sh
 python task2/benchmark.py --scenarios default open walls defense bullet --players both --depths 2 4 --repeats 3 --output experiments/search_fixed_depth.csv --summary experiments/search_fixed_depth_summary.csv
 python task2/tournament.py --scenarios default open walls defense bullet --depth 3 --max-cycles 60 --output experiments/tournament_fixed_depth.csv --summary experiments/tournament_fixed_depth_summary.csv
 ```
 
-Thời gian trong trận dùng lại cache và phụ thuộc trạng thái đã đi qua; benchmark
-snapshot dùng cùng trạng thái và evaluator mới. Không so raw score của các evaluator
-như cùng một thang chất lượng. Alpha-Beta phải giữ giá trị Minimax khi cùng evaluator
-và depth, không có nghĩa luôn trả cùng nước khi đồng điểm.
-
-Có thể đo thêm cùng ngân sách thời gian, nhưng chưa xuất bản CSV cho giao thức này:
+Tái hiện đối chứng terminal-only và trận không/có heuristic:
 
 ```sh
-python task2/tournament.py --scenarios default open walls --depth 6 --time-limit-ms 30 --max-cycles 20 --output equal_time_results.csv --summary equal_time_summary.csv
+python task2/benchmark.py --modes terminal_minimax terminal_alphabeta --scenarios default open walls defense bullet --players both --depths 2 4 --repeats 3 --output experiments/search_terminal_control.csv --summary experiments/search_terminal_control_summary.csv
+python task2/tournament.py --modes terminal_minimax terminal_alphabeta heuristic_minimax heuristic_alphabeta --scenarios default open walls defense bullet --depth 3 --max-cycles 60 --output experiments/tournament_terminal_control.csv --summary experiments/tournament_terminal_control_summary.csv
 ```
 
-`benchmark.py --scenarios all` gồm 40 map: 5 map kiểm tra + 35 ORIGINAL.
+Có thể dùng cùng bốn --modes đối chứng trong benchmark.py để tạo một CSV gồm cả
+terminal-only và heuristic, hoặc chọn bất kỳ tập mode nào trong sáu lựa chọn.
+Cặp chỉ được kiểm chứng khi có đủ hai mode tương ứng; CSV ghi tên evaluator.
+Lặp snapshot phục vụ đo thời gian, không tạo các trận độc lập. Thời gian trong trận
+dùng lại cache và phụ thuộc trạng thái đã đi qua; không so raw score giữa các
+evaluator như cùng thang chất lượng. Bảng kết quả: [REPORT.md](../REPORT.md).
 
-## Cùng GreedyAgent, có đổi bên
-
-`behavior_fixed_opponent.csv`: 24 trận trên DEFAULT, WALLS, ORIGINAL_20, mỗi cấu hình
-đấu GreedyAgent ở cả hai bên; depth 3, tối đa 60 vòng, không deadline/phạt lặp.
-Các cột movements, rotations, fires, stays đếm hành động của AI đang thử; di chuyển
-chỉ tính đổi ô. Một tập tình huống xác định và một đối thủ không cho tỷ lệ thắng
-tổng quát. Điểm 0 của terminal-only ở ngưỡng cắt là trung tính, không chứng minh hòa.
-
-Tái hiện tại thư mục repo bằng đoạn dưới. Chương trình nhập module từ repo hiện
-tại; không cần checkout phiên bản BASIC cũ. Dữ liệu trước/sau BASIC cũ được giữ
-trong lịch sử commit b6e13ec và đã bỏ khỏi bộ số liệu của bản nộp hiện tại.
+Có thể đo thêm cùng ngân sách thời gian; chưa xuất bản CSV cho giao thức này:
 
 ```sh
-python - . terminal_vs_heuristic_v1 experiments/behavior_fixed_opponent.csv <<'PY'
+python task2/tournament.py --modes terminal_minimax terminal_alphabeta heuristic_minimax heuristic_alphabeta --scenarios default open walls --depth 6 --time-limit-ms 30 --max-cycles 20 --output equal_time_results.csv --summary equal_time_summary.csv
+```
+
+`benchmark.py --scenarios all` gồm 40 map (5 map kiểm tra + 35 ORIGINAL).
+
+## Cùng đối thủ cố định
+
+behavior_fixed_opponent.csv: 36 trận trên DEFAULT, WALLS, ORIGINAL_20; mỗi cấu hình
+đấu GreedyAgent ở cả hai bên, depth 3, tối đa 60 vòng, không deadline/phạt lặp. Cột
+evaluator phân biệt rõ basic/heuristic/terminal_only; movements chỉ tính đổi ô,
+rotations/fires/stays tính xoay/bắn/bỏ lượt của AI đang thử. Một đối thủ và bộ tình
+huống xác định không đủ để suy ra tỷ lệ thắng tổng quát; điểm 0 ở ngưỡng cắt không
+chứng minh hòa. Tái hiện tại thư mục repo:
+
+```sh
+python - . basic_advanced_terminal_controls_v2 experiments/behavior_fixed_opponent.csv <<'PY'
 import sys
 from pathlib import Path
 repo, profile, output = sys.argv[1:]
@@ -66,10 +75,10 @@ from agent import SearchAgent
 from benchmark import build_scenarios, MODES_ORDER, write_csv
 from external_greedy import GreedyAgent
 from game import Action
-from search import state_key
+from search import state_key, CONTROL_MODES
 rows = []
 for name in ('default', 'walls', 'original_20'):
-    for mode in MODES_ORDER:
+    for mode in MODES_ORDER + CONTROL_MODES:
         for seat in (0, 1):
             state = build_scenarios()[name]
             state.max_cycles = 60
@@ -97,7 +106,7 @@ for name in ('default', 'walls', 'original_20'):
                 key = state_key(state)
                 history[key] = history.get(key, 0) + 1
             winner = state.winner()
-            rows.append(dict(profile=profile, scenario=name, mode=mode, seat=seat,
+            rows.append(dict(profile=profile, scenario=name, mode=mode, evaluator=ai.engine.evaluator.name, seat=seat,
                 depth=3, max_cycles=60, winner='draw' if winner is None else winner,
                 outcome='draw' if winner is None else 'win' if winner == seat else 'loss',
                 reason=state.termination_reason(), cycles=state.cycle, decisions=decisions,

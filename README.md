@@ -1,7 +1,8 @@
 # NMTTNT — Tank Battle / Adversarial Search
 
-Bản mã nguồn gọn để nộp bài, dùng Python/Pygame. So sánh Minimax/Alpha-Beta
-**không heuristic** với hai cấu hình **có heuristic**; giao diện classic, hoạt ảnh đạn.
+Bản mã nguồn Python/Pygame với Minimax/Alpha-Beta dùng đánh giá cơ bản hoặc
+nâng cao. Có thêm hai cấu hình terminal-only để đối chứng không heuristic đúng
+nghĩa. Giữ giao diện classic và hoạt ảnh đạn.
 Mô hình zero-sum, giải thích thuật toán và kết quả: [REPORT.md](REPORT.md).
 
 ## Cài đặt và chạy
@@ -50,8 +51,9 @@ Cách đọc số liệu và chạy lại thí nghiệm: [experiments/README.md]
 
 ## Chế độ và điều khiển
 
-- **AI BATTLE:** hai AI; chọn MINIMAX (NO HEURISTIC), ALPHA-BETA (NO HEURISTIC),
-  HEURISTIC MINIMAX hoặc HEURISTIC ALPHA-BETA. Nhấn B ở setup chọn 60/120/250 ms hoặc FULL DEPTH.
+- **AI BATTLE:** mặc định ALPHA-BETA (BASIC) đấu HEURISTIC ALPHA-BETA. Có bốn lựa
+  chọn chính và hai lựa chọn CONTROL: TERMINAL MINIMAX/ALPHA-BETA. Nhấn B ở setup
+  chọn 60/120/250 ms hoặc FULL DEPTH. Dòng gợi ý và Tab ghi rõ evaluator.
 - **1 PLAYER:** bàn phím đấu 4 NPC. Phần này dùng bản chiếu hai xe cho mỗi NPC;
   không phải tìm kiếm đối kháng đầy đủ năm tác nhân. Các map gốc nhập dành riêng cho AI BATTLE.
 - Setup: lên/xuống chọn dòng, trái/phải đổi giá trị, Enter bắt đầu, Esc quay lại.
@@ -73,24 +75,34 @@ ORIGINAL_01 … ORIGINAL_35 dùng địa hình chuyển từ map gốc.
 Giữ cùng map, vị trí, độ sâu hoặc ngân sách thời gian và đổi bên để so sánh.
 Nhấn Tab để xem evaluator, điểm/cận, số nút và độ sâu thực đã hoàn tất.
 
-| Cấu hình | Trạng thái chưa kết thúc tại ngưỡng độ sâu | Cắt tỉa |
+| Cấu hình trên UI | Điểm chưa kết thúc ở ngưỡng cắt | Cắt tỉa |
 | --- | --- | --- |
-| Minimax | 0, không heuristic | Không |
-| Alpha-Beta | 0, không heuristic | Có |
-| Heuristic Minimax | HP + đường tới vị trí bắn + ngắm + đạn | Không |
-| Heuristic Alpha-Beta | Cùng heuristic | Có |
+| MINIMAX (BASIC) | HP + khoảng cách Manhattan tới căn cứ địch | Không |
+| ALPHA-BETA (BASIC) | Cùng đánh giá cơ bản | Có |
+| HEURISTIC MINIMAX | HP + đường tới vị trí bắn + ngắm + đạn | Không |
+| HEURISTIC ALPHA-BETA | Cùng đánh giá nâng cao | Có |
+| CONTROL: TERMINAL MINIMAX | 0 trung tính, không heuristic | Không |
+| CONTROL: TERMINAL ALPHA-BETA | 0 trung tính, không heuristic | Có |
 
-Cả bốn dùng utility terminal: thắng +10000, thua -10000, hòa 0; ưu tiên thắng sớm,
-thua muộn bằng độ sâu còn lại. Hai bản không heuristic không dùng HP, khoảng cách,
-đường đi hay dự báo đạn để chấm trạng thái chưa kết thúc. `BasicEvaluator` đã được
-gỡ khỏi bản nộp này. Đây là tìm kiếm **hữu hạn theo độ sâu**, không phải vét cạn cả
-trận tới terminal. Điểm 0 ở ngưỡng cắt chỉ là trung tính, không khẳng định trạng thái
-đó thật sự hòa.
+**BASIC cũng là heuristic đơn giản.** Không gọi hai bản BASIC là “không heuristic”.
+Minimax/Alpha-Beta là cơ chế tìm kiếm; evaluator là thông tin đánh giá tại ngưỡng
+cắt. BASIC giúp phân biệt mất HP hoặc tiến tới mục tiêu; nâng cao thêm thông tin
+vật cản, vị trí bắn và đạn. Mọi cấu hình giữ utility terminal +10000/−10000/0 và
+ưu tiên thắng sớm/thua muộn bằng độ sâu còn lại. Không ép di chuyển/ngẫu nhiên.
 
-Bản không heuristic có thể đứng bắn khi các hành động đều bằng 0; FIRE đứng trước
-trong thứ tự hành động cố định. Không ép xe di chuyển bằng kịch bản/ngẫu nhiên.
-Bản heuristic có tín hiệu dẫn đường sớm hơn, nhưng không bảo đảm thắng hoặc tối ưu
-cả trận. Luật game và hoạt ảnh giống nhau ở cả bốn cấu hình.
+Để trình bày đối chứng **không/có heuristic**, chọn hai CONTROL và hai HEURISTIC;
+không cần sửa code. Ví dụ đo đúng bốn cấu hình này:
+
+```sh
+python task2/benchmark.py --modes terminal_minimax terminal_alphabeta heuristic_minimax heuristic_alphabeta --scenarios default open walls --players both --depths 2 4 --repeats 3
+python task2/tournament.py --modes terminal_minimax terminal_alphabeta heuristic_minimax heuristic_alphabeta --scenarios default open walls --depth 3 --max-cycles 40
+```
+
+Terminal-only không xét HP/khoảng cách khi chưa kết thúc; điểm 0 ở ngưỡng cắt không
+chứng minh hòa. Nó vẫn có thể đứng bắn khi đồng điểm, nhưng né nếu tìm thấy nguy cơ
+thua trong cây. BASIC còn có thể mắc ở vật cản vì Manhattan không biết đi vòng;
+đánh giá nâng cao cũng chỉ là ước lượng. Không cấu hình nào bảo đảm tối ưu cả trận.
+Các bộ dữ liệu cơ bản/nâng cao và terminal-only được ghi riêng, cùng điều kiện.
 
 ## Nguồn gốc
 

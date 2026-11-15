@@ -1,8 +1,8 @@
 # Map Battle City gốc đã chuyển sang định dạng AI
 
-Có **35 map**, chọn trong **AI BATTLE → MAP → ORIGINAL_01 … ORIGINAL_35**.
-Khi đang chọn dòng MAP, nhấn **O** để tới ORIGINAL_01, trái/phải đổi màn;
-PageUp/PageDown nhảy 5 map, Home/End tới map đầu/cuối. Thanh bên ghi LV01 … LV35.
+Có **35 map**, chọn trong **AI WARGAME → COMBAT SECTOR → ORIGINAL_01 … ORIGINAL_35**.
+Khi đang chọn dòng COMBAT SECTOR (MAP), nhấn **O** để tới ORIGINAL_01, trái/phải đổi màn;
+PageUp/PageDown nhảy 5 map, Home/End tới map đầu/cuối. Thanh tiêu đề HUD ghi tên ORIGINAL_01 … ORIGINAL_35.
 
 
 ## Định dạng và vị trí xuất phát
@@ -36,7 +36,7 @@ Không cần xóa chướng ngại vật ở bốn vị trí này trên cả 35 
 
 Nguồn gốc dùng 26 × 26 ô nhỏ, mỗi ô 16 pixel. Xe gốc chiếm khoảng 2 × 2 ô nhỏ.
 Vì xe AI chiếm một ô, bộ chuyển gộp **2 × 2 → 1**, tạo lưới 13 × 13.
-Bàn 416 pixel hiện tại có ô 32 pixel khi chơi các map này.
+UI tự co giãn sprite theo số hàng/cột để bản đồ vừa khung hiển thị.
 
 | Ký hiệu nguồn | Chuyển thành |
 | --- | --- |

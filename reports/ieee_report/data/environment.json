@@ -1,0 +1,72 @@
+{
+  "measured_at_utc": "2026-11-15T05:34:46.015008+00:00",
+  "profile": "assignment_four_modes_v1",
+  "python": "3.12.14",
+  "system": "Linux",
+  "machine": "x86_64",
+  "modes": {
+    "minimax": "terminal_only",
+    "alphabeta": "terminal_only",
+    "heuristic_minimax": "heuristic",
+    "heuristic_alphabeta": "heuristic"
+  },
+  "transposition_table": false,
+  "track_pv_during_experiments": false,
+  "snapshot_fresh_engine": true,
+  "snapshot_fresh_evaluator": true,
+  "root_ordering": "same evaluator-based ordering in each matching algorithm pair; order_evals reported separately",
+  "source_sha256": {
+    "task2/search.py": "0a03e9f29fa9dc0a497426f3d311c787bdcdc4e3e0e197e689f6b6ce3081b550",
+    "task2/game.py": "9c331e1bbd0f480809a021c9a2e4c8df9e4d4e57806cc18cacde0d54aebef570",
+    "task2/heuristics.py": "361d3cd03d05aa7123ef60b2d824dcac8fb2158b0833f5d849076c2c54c19856",
+    "task2/agent.py": "d2578bb09f568fd0e0c963e8d4fa3525c19a7010b458f9f702e5e728e7eea478",
+    "task2/benchmark.py": "1ab1978e8f580fbbe4ca7b50a15a3e0c7ebcf4ae223d6ec12e6511563ed31232",
+    "task2/tournament.py": "c6c942fdd9e1137e7da76a49cea0fdba5f018600a53d5a6b16e71b90fb31e757",
+    "tests/test_core.py": "103412e7f750d01c2f7e9eb6b2f9461a1bcb284d4210282cdcbb8cb5d8cd3911"
+  },
+  "fixed_depth_search": {
+    "scenario_names": [
+      "default",
+      "open",
+      "walls",
+      "defense",
+      "bullet"
+    ],
+    "players": [
+      0,
+      1
+    ],
+    "depths": [
+      2,
+      4
+    ],
+    "repeats": 3,
+    "time_limit_ms": null,
+    "shuffle_seed": 42,
+    "searches": 240,
+    "validated_pairs": 120
+  },
+  "fixed_depth_matches": {
+    "scenario_names": [
+      "default",
+      "open",
+      "walls",
+      "defense",
+      "bullet"
+    ],
+    "depth": 3,
+    "environment_max_cycles": 60,
+    "max_plies": null,
+    "cycle_cap_in_search_state": false,
+    "time_limit_ms": null,
+    "matches": 60,
+    "swapped_seats": true,
+    "unfinished_matches": 8,
+    "simultaneous_destruction_draws": 8
+  },
+  "turn_model": "P0 action, visible to P1; P1 action; then advance bullets up to 3 cells with per-cell collision checks.",
+  "termination_model": "Destruction only. Environment caps stop experiments with unfinished status, never create terminal states or draws.",
+  "evaluator_cache_policy": "Cold at every snapshot measurement. Agents reset at each match; geometric heuristic cache reused only within a match.",
+  "overtime_definition": "external wall time > 1.1 * time_limit_ms; cooperative soft deadline",
+  "notes": "Measured sequentially on this host, not the macOS 13.7.8 Intel i5 grading machine. Four required modes only; obsolete BASIC/control datasets removed."
+}

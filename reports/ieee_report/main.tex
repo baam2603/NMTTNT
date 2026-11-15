@@ -1,0 +1,81 @@
+% !TeX program = xelatex
+% Chọn main.tex làm Main document; biên dịch bằng XeLaTeX.
+\documentclass[conference,a4paper]{IEEEtran}
+\usepackage{fontspec}
+\IfFontExistsTF{TeX Gyre Termes}
+  {\setmainfont{TeX Gyre Termes}}
+  {\setmainfont{Liberation Serif}}
+\IfFontExistsTF{TeX Gyre Heros}
+  {\setsansfont{TeX Gyre Heros}}
+  {\setsansfont{Liberation Sans}}
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont{Latin Modern Mono}[Scale=MatchLowercase]}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,array}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{balance}
+\usepackage[hidelinks,unicode]{hyperref}
+\urlstyle{same}
+\renewcommand{\abstractname}{Tóm tắt}
+\renewcommand{\IEEEkeywordsname}{Từ khóa}
+\renewcommand{\refname}{Tài liệu tham khảo}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,
+  columns=fullflexible,keepspaces=true,showstringspaces=false,
+  frame=single,rulecolor=\color{black!25},captionpos=b,
+  aboveskip=6pt,belowskip=6pt}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\begin{document}
+\title{Báo cáo cuối kỳ: Nhập môn Trí tuệ nhân tạo}
+% Điền thành viên theo nhóm thực tế; không dùng tên có sẵn trong mẫu.
+\author{\IEEEauthorblockN{Họ tên / MSSV: \underline{\hspace{3cm}}}
+\IEEEauthorblockA{Lớp / Nhóm: \underline{\hspace{3cm}}\\
+Trường / Khoa: \underline{\hspace{3cm}}\\
+Giảng viên: \underline{\hspace{3cm}}}}
+\maketitle
+
+% Bổ sung tóm tắt Bài 1 và Bài 3 khi hai thành viên hoàn thiện nội dung.
+\begin{abstract}
+Phần tìm kiếm đối kháng mô hình hóa Tank Battle thành trò chơi hai bên
+tổng bằng không và triển khai bốn cấu hình: Minimax, Alpha-Beta,
+Heuristic Minimax và Heuristic Minimax kết hợp Alpha-Beta. Chương trình
+dùng Python/Pygame, tổ chức hướng đối tượng, có giao diện quan sát
+quyết định và cơ chế nạp agent bên ngoài. Thực nghiệm gồm 240 lượt tìm
+kiếm trên cùng trạng thái và 60 trận đổi bên. Các cặp cùng hàm đánh giá
+khớp giá trị; Alpha-Beta giảm số nút trên bộ thử. Heuristic cung cấp
+tín hiệu chiến thuật ở lá chưa kết thúc với chi phí đánh giá bổ sung.
+Kết quả được giới hạn trong các bản đồ, độ sâu và môi trường đã đo.
+\end{abstract}
+\begin{IEEEkeywords}
+trí tuệ nhân tạo, tìm kiếm đối kháng, Minimax, Alpha-Beta, heuristic,
+Tank Battle, Pygame.
+\end{IEEEkeywords}
+
+% Ba file tương ứng ba bài toán; chỉ task2.tex đã được viết đầy đủ.
+\input{tasks/task1}
+\input{tasks/task2}
+\input{tasks/task3}
+
+\balance
+\begin{thebibliography}{00}
+\bibitem{assignment}
+Đề bài học phần Introduction to AI, ``Task 2: Adversarial Search ---
+Tank Battle Game,'' tài liệu đề bài được cung cấp cho dự án.
+\bibitem{battlecity}
+Raitis G., ``Battle City Tanks,'' mã nguồn và tài nguyên game.
+[Trực tuyến]. \url{https://github.com/raitisg/battle-city-tanks}.
+\bibitem{pygame}
+Pygame, ``Pygame documentation.''
+[Trực tuyến]. \url{https://www.pygame.org/docs/}.
+\bibitem{project}
+Nhóm thực hiện, ``NMTTNT: Tank Battle,'' mã nguồn, kiểm thử và dữ liệu
+thực nghiệm. [Trực tuyến]. \url{https://github.com/baam2603/NMTTNT}.
+\end{thebibliography}
+\end{document}

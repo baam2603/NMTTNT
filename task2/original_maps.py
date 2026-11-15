@@ -25,7 +25,6 @@ class ConvertedLevel:
 
 
 class OriginalLevelConverter:
-    """A conservative 2x2 pool keeps source obstacles on a tank-sized grid."""
     def convert(self, text):
         lines = text.splitlines()
         if len(lines) != 26 or any(len(row) != 26 for row in lines):
@@ -41,7 +40,6 @@ class OriginalLevelConverter:
                 block = {lines[2*row+dr][2*col+dc] for dr in (0,1) for dc in (0,1)}
                 cells.append('S' if block & set('@~') else 'W' if '#' in block else '.')
             grid.append(cells)
-        # Do not silently clear walls/steel to make a spawn work.
         for row,col in TANK_POS + BASE_POS:
             if grid[row][col] != '.':
                 raise ValueError(f'Vị trí xe/căn cứ bị chặn sau chuyển đổi: {(row,col)}')

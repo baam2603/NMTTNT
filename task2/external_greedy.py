@@ -1,8 +1,6 @@
 from collections import deque
 from game import Action, HUONG
-
 MOVES = [Action.MOVE_UP, Action.MOVE_DOWN, Action.MOVE_LEFT, Action.MOVE_RIGHT]
-
 
 class GreedyAgent:
     def __init__(self, player_id):

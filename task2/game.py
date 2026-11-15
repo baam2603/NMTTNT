@@ -7,14 +7,11 @@ class Action(Enum):
     MOVE_RIGHT = 3
     FIRE = 4
     STAY = 5
-
 class EntityKind(str, Enum):
     WALL = "wall"
     STEEL = "steel"
     TANK = "tank"
     BASE = "base"
-
-
 HUONG = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 HUONG_DI = {
     Action.MOVE_UP: 0,

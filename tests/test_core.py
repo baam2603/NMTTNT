@@ -1,4 +1,3 @@
-"""Core assignment checks: independent oracle, game rules and fair experiments."""
 import sys
 import time
 import unittest

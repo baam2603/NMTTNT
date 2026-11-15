@@ -1,16 +1,12 @@
 import heapq
 from abc import ABC, abstractmethod
 from math import ceil
-
 from game import HUONG, EntityKind, TOC_DO_DAN
 
 WIN = 10_000
 W = {"base_hp": 100, "tank_hp": 80, "path": 10, "shoot": 30, "bullet": 60}
-
-
 def bounded(score):
     return max(-WIN + 100, min(WIN - 100, score))
-
 
 class Evaluator(ABC):
     name = "evaluator"
@@ -22,7 +18,6 @@ class Evaluator(ABC):
     def __call__(self, state, me):
         return self.evaluate(state, me)
 
-
 class TerminalEvaluator(Evaluator):
     name = "terminal_only"
 
@@ -30,7 +25,6 @@ class TerminalEvaluator(Evaluator):
         if not state.is_terminal() or state.winner() is None:
             return 0
         return WIN if state.winner() == me else -WIN
-
 
 class SimpleEvaluator(TerminalEvaluator):
     name = "material"
@@ -48,7 +42,6 @@ class SimpleEvaluator(TerminalEvaluator):
             return super().evaluate(state, me)
         return bounded(self.material(state, me))
 
-
 class HeuristicEvaluator(SimpleEvaluator):
     name = "heuristic"
     CACHE_LIMIT = 512
@@ -58,7 +51,6 @@ class HeuristicEvaluator(SimpleEvaluator):
     def __init__(self, weights=None):
         super().__init__(weights)
         self._dist_cache = {}
-
     def attack_cost_map(self, state, player):
         goal = state.bases[1 - player]
         bases = frozenset((b.r, b.c) for b in state.bases if b.hp > 0)
@@ -67,12 +59,10 @@ class HeuristicEvaluator(SimpleEvaluator):
         if key in self._dist_cache:
             return self._dist_cache[key]
         distances, queue = {}, []
-
         def offer(node, cost):
             if cost < distances.get(node, float("inf")):
                 distances[node] = cost
                 heapq.heappush(queue, (cost, node))
-
         for outward, (dr, dc) in enumerate(HUONG):
             row, col, steps, brick_hp = goal.r, goal.c, 0, 0
             while True:
@@ -82,7 +72,6 @@ class HeuristicEvaluator(SimpleEvaluator):
                     break
                 offer((row, col, outward ^ 1), 1 + ceil(steps / TOC_DO_DAN) + brick_hp)
                 brick_hp += state.walls.get(cell, 0)
-
         while queue:
             cost, (row, col, direction) = heapq.heappop(queue)
             if cost != distances[(row, col, direction)]:
@@ -95,14 +84,12 @@ class HeuristicEvaluator(SimpleEvaluator):
                 for old_direction in range(4):
                     turn = int(hp > 0 and old_direction != direction)
                     offer((*previous, old_direction), cost + 1 + hp + turn)
-
             ahead = (row + dr, col + dc)
             if (not state.in_bounds(*ahead) or ahead in state.steel
                     or ahead in state.walls or ahead in bases):
                 for old_direction in range(4):
                     if old_direction != direction:
                         offer((row, col, old_direction), cost + 1)
-
         if len(self._dist_cache) >= self.CACHE_LIMIT:
             self._dist_cache.clear()
         self._dist_cache[key] = distances
@@ -156,7 +143,6 @@ class HeuristicEvaluator(SimpleEvaluator):
             tanks, bases = list(forecast.tanks), list(forecast.bases)
             forecast._advance_bullets()
             for p in (0, 1):
-                # A hit matters more when the victim is close to destruction.
                 risk[p] += ((tanks[p].hp - forecast.tanks[p].hp) * (1 + 1 / max(1, tanks[p].hp))
                             + 1.5 * (bases[p].hp - forecast.bases[p].hp)
                             * (1 + 1 / max(1, bases[p].hp))) / cycle

@@ -1,8 +1,3 @@
-"""Seat-swapped matches under one fixed-depth or equal-time protocol.
-
-Deterministic scenarios: replaying an identical configuration is not an independent
-trial. Summary rates describe only the selected maps, seats and search settings.
-"""
 import argparse
 from math import isfinite
 from itertools import combinations

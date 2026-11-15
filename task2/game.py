@@ -266,8 +266,6 @@ class GameState:
 
 
 class TextRenderer:
-    """Vẽ trạng thái game dạng văn bản (tách khỏi GameState)."""
-
     @staticmethod
     def render(state):
         g = [[" " for _ in range(state.cols)] for _ in range(state.rows)]

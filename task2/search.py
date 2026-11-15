@@ -1,27 +1,20 @@
 from abc import ABC, abstractmethod
 from math import isfinite
 from time import perf_counter
-
 from heuristics import HeuristicEvaluator, TerminalEvaluator
-
 INF = float('inf')
 
-
 def state_key(state):
-    """Physical position for UI PV and external-agent history; independent of time."""
     return (state.rows, state.cols, state.steel, tuple(state.tanks),
             tuple(state.bases), tuple(sorted(state.bullets)),
             state.wall_key, state.to_move)
-
 
 def _new_stats():
     return dict(nodes=0, generated=0, leaves=0, cutoffs=0, pruned_actions=0,
                 evals=0, order_evals=0, leaf_evals=0)
 
-
 class SearchTimeout(Exception):
     pass
-
 
 class SearchAlgorithm(ABC):
     def __init__(self, evaluator=None, name=None):

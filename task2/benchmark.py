@@ -5,13 +5,10 @@ from collections import defaultdict
 from math import isclose
 from pathlib import Path
 from statistics import mean, median
-
 from game import Bullet, GameState
 from search import MODES, MODE_PAIRS, choose_action
 
-
 MODES_ORDER = tuple(MODES)
-
 def make_map(walls=(), steel=()):
     grid = [[" " for _ in range(9)] for _ in range(9)]
     grid[8][6] = "a"
@@ -21,7 +18,6 @@ def make_map(walls=(), steel=()):
     for r, c in steel:
         grid[r][c] = "S"
     return ["".join(row) for row in grid]
-
 
 def build_scenarios(include_original=True):
     cases = {"default": GameState.from_layout()}
@@ -48,7 +44,6 @@ def build_scenarios(include_original=True):
     bullet = GameState.from_layout(
         make_map(), tank_pos=((7, 4), (1, 4))
     )
-    # Dan cua player 1 dang tien den tank player 0.
     bullet.bullets.append(Bullet(6, 4, 1, 1))
     cases["bullet"] = bullet
 
@@ -56,7 +51,6 @@ def build_scenarios(include_original=True):
         from original_maps import build_original_maps
         cases.update(build_original_maps())
     return cases
-
 
 def measure_one(state, scenario, player, depth, mode, repeat):
     snapshot = state.copy()
@@ -68,7 +62,6 @@ def measure_one(state, scenario, player, depth, mode, repeat):
     )
 
     action, info = choose_action(snapshot, depth=depth, mode=mode, track_pv=False)
-
     after = (
         tuple(snapshot.tanks), tuple(snapshot.bases),
         tuple(snapshot.bullets), tuple(sorted(snapshot.walls.items())),
@@ -124,7 +117,6 @@ def validate_pairs(rows):
                 )
     return pairs_checked
 
-
 def summarize(rows):
     groups = defaultdict(list)
     for row in rows:
@@ -153,7 +145,6 @@ def summarize(rows):
         })
     return summary
 
-
 def write_csv(path, rows):
     if not rows:
         return
@@ -177,7 +168,6 @@ def print_summary(summary):
             f"{row['mean_nodes']:>9.0f} {row['mean_cutoffs']:>8.0f} "
             f"{row['mean_total_evals']:>9.0f}"
         )
-
 
 def main():
     parser = argparse.ArgumentParser(description="Benchmark Battle City Adversarial Search")

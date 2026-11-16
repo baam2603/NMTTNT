@@ -1,4 +1,3 @@
-
 import os
 import importlib.util
 import inspect
@@ -9,13 +8,8 @@ from time import perf_counter
 
 HERE = Path(__file__).resolve().parent
 
-# Cac file loi cua task2, khong phai AI ben ngoai
 CORE_MODULES = {"game", "agent", "search", "heuristics", "benchmark", "__init__"}
 
-
-# --------------------------------------------------------------------------- #
-#  Backend: tim va nap task2
-# --------------------------------------------------------------------------- #
 def find_task2_dir():
     """Tim thu muc task2 (chua game.py va agent.py)."""
     candidates = []

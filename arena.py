@@ -1,12 +1,6 @@
-"""One keyboard player versus four NPCs; search algorithms remain unchanged.
 
-Each NPC plans through a two-side projection of the current arena. Its teammates
-are stationary obstacles in that projection; real arena collisions use all tanks.
-"""
 from game import GameState, Action, Tank, Bullet, HUONG, HUONG_DI, TOC_DO_DAN, EntityKind
-
 NPC_MODES = ("minimax", "heuristic_minimax", "alphabeta", "heuristic_alphabeta")
-
 
 class ArenaState(GameState):
     @classmethod
